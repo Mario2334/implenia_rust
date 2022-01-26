@@ -1,12 +1,10 @@
-use yew::prelude::*;
+// #![feature(extern_types)]
 
-#[function_component(Main)]
-fn main_comp() -> Html {
-    html! {
-        <p> {{"Hello world"}} </p>
-    }
-}
+mod routes;
+mod pages;
+mod components;
 
-fn main() {
-    yew::start_app::<Main>();
+fn main(){
+    wasm_logger::init(wasm_logger::Config::default());
+    yew::start_app::<routes::Root>();
 }
