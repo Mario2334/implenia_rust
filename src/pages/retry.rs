@@ -1,20 +1,16 @@
 use serde_json::{Value};
 use yew::prelude::*;
-// use yew_router::history::History;
-use yew_router::prelude::*;
+use yew_router::history::History;
+use yew_router::prelude::RouterScopeExt;
 use crate::components::request::get_request;
 use web_sys::HtmlInputElement;
 use crate::routes::Route;
 use crate::components::state::get_global_lang;
 use crate::components::utils::set_get::*;
 use crate::components::state::*;
-use crate::components::model::{ErrorHandlerModel, ID, LicensePlateResponse, WeightResponse};
+use crate::components::model::{ID, LicensePlateResponse, WeightResponse};
 use gloo_timers::callback::Timeout;
-
-
-pub struct RetryModel {
-    error_msg: ErrorHandlerModel
-}
+pub struct RetryModel {}
 
 pub enum Msg {
     GotoBack,
@@ -49,10 +45,7 @@ impl Component for RetryModel {
 
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let query:ErrorHandlerModel = _ctx.link().location().unwrap().query().unwrap();
-        Self {
-            error_msg: query
-        }
+        Self {}
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -61,7 +54,7 @@ impl Component for RetryModel {
             Msg::GotoBack =>{
                 let history = _ctx.link().history().unwrap();
                 let timeout = Timeout::new(5_000,move|| {
-                    history.back();
+                    history.push(Route::BarcodeModel);
                 }).forget();
                 
                 true
@@ -104,7 +97,7 @@ impl Component for RetryModel {
                     <div class="row">
                         <div class="col-md-12 text-center" style="margin-top: 250px;">
                             <label style="font-size:60px; font-weight: bold; color: red;">
-                                { self.error_msg.message.clone() }
+                                { self.get_value("retry_butt") }
                             </label>
                         </div>
                     </div>

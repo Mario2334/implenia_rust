@@ -1,38 +1,27 @@
 use crate::components::constants::*;
-use crate::components::model::{Contract, LicensePlateResponse, ID};
+use crate::components::model::{Transactions, WeightResponse, ID};
 use crate::components::request::get_request;
 use crate::components::state::*;
 use crate::components::utils::set_get::*;
-use crate::components::utils::status_handler::error_handler;
 use crate::routes::Route;
-use serde_json::Value;
+use log::log;
 use yew::prelude::*;
-use yew_router::history::History;
-use yew_router::prelude::RouterScopeExt;
+use yew_router::prelude::*;
 
 pub enum Msg {
-    SetLanguage(&'static str),
+    SetLicensePlate(String),
     GotHome,
-    SetBarcodeValue(String),
-    SetLoading(bool),
     NextPage,
     PreviousPage,
+    UpdateLoading,
 }
 
-pub struct BarcodeInputModel {
-    barcode_value: String,
-    is_auftrag_data_loading: bool,
+pub struct LicensePlateView {
+    license_plate: String,
+    loading: bool,
 }
 
-impl BarcodeInputModel {
-    async fn get_language_file() -> serde_json::Value {
-        let lang_json = get_request("/bin/language.json").await;
-        return lang_json.unwrap();
-    }
-    fn get_barcode(&self) -> String {
-        self.barcode_value.clone()
-    }
-
+impl LicensePlateView {
     fn get_value(&self, value: &str) -> String {
         let lang_json_inst = get_global_lang().clone();
         let val = lang_json_inst.get(get_lang()).and_then(|m| m.get(value));
@@ -46,22 +35,36 @@ impl BarcodeInputModel {
     }
 }
 
-impl Component for BarcodeInputModel {
+impl Component for LicensePlateView {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        log::info!("{}", "inside barcode input");
-        Self {
-            barcode_value: "".to_string(),
-            is_auftrag_data_loading: false,
+    fn create(ctx: &Context<Self>) -> Self {
+        let license_plate = get_license_plate();
+        LicensePlateView {
+            license_plate,
+            loading: false,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::SetLanguage(str) => {
-                set_lang(str.clone());
+            Msg::SetLicensePlate(license_plate) => {
+                if license_plate == String::from("<-") {
+                    self.license_plate.pop();
+                } else {
+                    self.license_plate += &*license_plate;
+                }
+                true
+            }
+            Msg::NextPage => {
+                let history = _ctx.link().history().unwrap();
+                history.push(Route::WeightViewModel);
+                true
+            }
+            Msg::PreviousPage => {
+                let history = _ctx.link().history().unwrap();
+                history.push(Route::BarcodeModel);
                 true
             }
             Msg::GotHome => {
@@ -69,27 +72,8 @@ impl Component for BarcodeInputModel {
                 history.push(Route::Root);
                 true
             }
-            Msg::SetBarcodeValue(barcode_val) => {
-                if barcode_val == String::from("<-") {
-                    self.barcode_value.pop();
-                } else {
-                    self.barcode_value += &*barcode_val;
-                }
-                true
-            }
-            Msg::SetLoading(is_loading) => {
-                self.is_auftrag_data_loading = is_loading;
-                true
-            }
-            Msg::NextPage => {
-                self.is_auftrag_data_loading = false;
-                let history = _ctx.link().history().unwrap();
-                history.push(Route::LicensePlateViewModel);
-                true
-            }
-            Msg::PreviousPage => {
-                let history = _ctx.link().history().unwrap();
-                history.push(Route::LanguageModel);
+            Msg::UpdateLoading => {
+                self.loading = true;
                 true
             }
         }
@@ -100,7 +84,6 @@ impl Component for BarcodeInputModel {
         let key_two_line = vec!["Q", "W", "E", "R", "T", "Z", "U", "I", "O", "P", "<-"];
         let key_three_line = vec!["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ä", "Ö"];
         let key_four_line = vec!["Y", "X", "C", "V", "B", "N", "M", "Ü", ".", "SPACE"];
-
         const OVERIDE: &str = "
         display: block;
         margin: 0 auto;
@@ -110,28 +93,10 @@ impl Component for BarcodeInputModel {
         let link = ctx.link();
         let home_cb = link.callback(move |_| Msg::GotHome);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
-        let get_contract_cb = ctx.link().callback(move |_| Msg::SetLoading(true));
-
-        if self.is_auftrag_data_loading {
-            let barcode = self.barcode_value.clone();
-            ctx.link().send_future(async move {
-                let url = &format!("{}/api/ID/?ident={}", API_URL, barcode);
-                let response = get_request(url).await;
-                let data = response.unwrap().get(0).unwrap().clone();
-                let id: ID = serde_json::from_value(data).unwrap();
-                set_id(id.clone());
-                // start_websocket();
-                let websocket_url = &format!("{}?cmd=GET PLATE", DEVMAN_URL);
-                let weight_response = get_request(websocket_url).await;
-                let weight_data = weight_response.unwrap().clone();
-                let license_plate_response: LicensePlateResponse =
-                    serde_json::from_value(weight_data).unwrap();
-                set_licence_plate(license_plate_response.license_plate.unwrap());
-                // log::info!("{}",id.contract_number);
-                Msg::NextPage
-            });
-        }
-        // error_handler(String::from("Error test"));
+        let next_cb = link.callback(move |_| Msg::UpdateLoading);
+        let contract = get_contract();
+        log::info!("{}", contract.contract_number);
+        log::info!("{}", get_license_plate());
         let lang_json_file = get_global_lang().clone();
 
         if lang_json_file.is_null() {
@@ -140,52 +105,86 @@ impl Component for BarcodeInputModel {
             return html! {<div></div>};
         }
 
-        // link.sen
+        if self.loading {
+            let b = self.license_plate.clone();
+            ctx.link().send_future(async move {
+                let license_url = &format!("{}api/Vehicle-View/?license_plate={}", API_URL, &b);
+                let license_response = get_request(&license_url).await;
+
+                if license_response.as_ref().unwrap().get(0) != None {
+                    let license_data = license_response.unwrap().get_mut(0).unwrap().clone();
+                    let license_id = &license_data["id"];
+                    let id_url = &format!("{}api/ID/?vehicle={}", API_URL, &license_id);
+                    let response = get_request(&id_url).await;
+                    log::info!("Response {:?}", response.as_ref());
+                    if response.as_ref().unwrap().get(0) != None {
+                        let data = response.unwrap().get_mut(0).unwrap().clone();
+                        let id: ID = serde_json::from_value(data).unwrap();
+
+                        let transaction_request_url = &format!(
+                            "{}api/Transactions/?combination_id={}&trans_flag=0",
+                            API_URL,
+                            id.ident.as_ref().unwrap()
+                        );
+                        let response = get_request(&transaction_request_url).await;
+                        if response.as_ref().unwrap().get(0) != None {
+                            let data = response.unwrap().get_mut(0).unwrap().clone();
+                            let transaction: Transactions = serde_json::from_value(data).unwrap();
+                            set_transactions(transaction);
+                        } else {
+                            log::info!("{:?}", id.clone());
+                            set_id(id.clone());
+                        }
+                    } else {
+                        let data_null = ID::default();
+                        set_id(data_null.clone());
+                    }
+                }
+                let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                let weight_response = get_request(websocket_url).await;
+                let weight_data = weight_response.unwrap().clone();
+                let weight_response: WeightResponse = serde_json::from_value(weight_data).unwrap();
+                set_weight_detail(weight_response.clone());
+                Msg::NextPage
+            });
+        }
 
         html! {
             <div>
-                            <div class="container" style="height: 660px">
-                                <div class="row" style="margin-top: '10px'">
-                                </div>
-                                <div class="row" style="margin-top: 10px">
-                                    <div onclick={home_cb}>
-                                        <img width={80} height={80} src="img/buttons/Home.png" />
-                                    </div>
-                                    <div style="width: 250px;margin-left: auto;margin-right: auto;text-align: center;">
+                <div class="container" style="height: 660px">
+                    <div class="row" style="margin-top: '10px'">
+                    </div>
+                    <div class="row" style="margin-top: 10px">
+                        <div onclick={home_cb}>
+                            <img width={80} height={80} src="img/buttons/Home.png" />
+                        </div>
+                        <div style="width: 250px;margin-left: auto;margin-right: auto;text-align: center;">
                                         //<img width=150 height=70 src="/img/evo.png"/>
 
-                                    </div>
-                                    <div>
-                                        <img width=150 height=70 src="/img/Logo.png"/>
-                                    </div>
-                                </div>
-                                <div class="row" style="margin-top: 20px">
-                                    <div class="col-1"></div>
-                                    <div class="col-8">
-                                        <label style="font-size:25px; font-weight: bold; color: #000947; margin-left: 20px">
-                                            {self.get_value("enter_barcode_manually")}
-                                        </label>
-                                        <div style="display: flex; flexDirection: row; marginTop:20px">
-                                            <label style="font-size:20px; font-weight: bold; color: #000947; margin-left: 20px">
-                                            // {self.get_value("enter_id")}
-                                            </label>
-                                            <input autofocus={true} id="barcodeinput" style="text-align: center;margin-left: 10px; width:85%; height: 60px; border: 1px solid #000947;fontSize:18px"
-                                            value={self.barcode_value.clone()}/>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                    </div>
-                                    <div class="col">
-                                        <img width={150} height={150} style="border: 5px solid black" src="/img/buttons/reader.jpeg"/>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-1">
-                                    </div>
-                                    <div class="col"></div>
-                                </div>
-                                {
-                                    if self.is_auftrag_data_loading {
+                        </div>
+                        <div>
+                            <img width=150 height=70 src="/img/Logo.png"/>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 20px">
+                        <div class="col-2"></div>
+                        <div class="col-8 text-center">
+                            <label style="font-size:25px; font-weight: bold; color: #000947; margin-left: 20px">
+                                {self.get_value("check_extracted_license_plate")}
+                            </label>
+                            <div style="display: flex; flexDirection: row; marginTop:20px">
+                                <label style="font-size:20px; font-weight: bold; color: #000947; margin-left: 20px">
+                                // {self.get_value("enter_id")}
+                                </label>
+                                <input autofocus={true} id="barcodeinput" style="text-align: center;margin-left: 10px; width:85%; height: 60px; border: 1px solid #000947;fontSize:18px"
+                                value={self.license_plate.clone()}/>
+                            </div>
+                        </div>
+                        <div class="col-2"></div>
+                    </div>
+
+                        {
+                                    if self.loading {
                                         html!{
                                         <div style="margin-top: 30px">
                                             // <ClockLoader color={'#000947'} loading={true} css={override} size={50} id='loaderone' />
@@ -211,12 +210,12 @@ impl Component for BarcodeInputModel {
                                                             spacing = "margin-left: -20px";
                                                         }
                                                         let val_click_cb = link.callback(move |_| {
-                                                            Msg::SetBarcodeValue(string.to_string())
+                                                            Msg::SetLicensePlate(string.to_string())
                                                         });
                                                         html!{
                                                         <div class="col" style={spacing} onclick={val_click_cb}>
                                                             <div style="border: 1px solid black; border-radius:4px; \
-                                                                        width: 80px; height: 80px;\
+                                                                        width: 70px; height: 70px;\
                                                                         text-align: center; justify-content: center; \
                                                                         display: flex; align-items: center; color: #000947">
                                                             {{string}}
@@ -238,12 +237,12 @@ impl Component for BarcodeInputModel {
                                                             spacing = "margin-left: -20px";
                                                         }
                                                         let val_click_cb = link.callback(move |_| {
-                                                            Msg::SetBarcodeValue(string.to_string())
+                                                            Msg::SetLicensePlate(string.to_string())
                                                         });
                                                         html!{
                                                         <div class="col" style={spacing} onclick={val_click_cb}>
                                                             <div style="border: 1px solid black; border-radius:4px; \
-                                                                        width: 80px; height: 80px;\
+                                                                        width: 70px; height: 70px;\
                                                                         text-align: center; justify-content: center; \
                                                                         display: flex; align-items: center; color: #000947">
                                                             {{string}}
@@ -265,12 +264,12 @@ impl Component for BarcodeInputModel {
                                                             spacing = "margin-left: -20px";
                                                         }
                                                         let val_click_cb = link.callback(move |_| {
-                                                            Msg::SetBarcodeValue(string.to_string())
+                                                            Msg::SetLicensePlate(string.to_string())
                                                         });
                                                         html!{
                                                         <div class="col" style={spacing} onclick={val_click_cb}>
                                                             <div style="border: 1px solid black; border-radius:4px; \
-                                                                        width: 80px; height: 80px;\
+                                                                        width: 70px; height: 70px;\
                                                                         text-align: center; justify-content: center; \
                                                                         display: flex; align-items: center; color: #000947">
                                                             {{string}}
@@ -296,15 +295,15 @@ impl Component for BarcodeInputModel {
                                                             space_val = "160px";
                                                         }
                                                         let buttonStyle= format!("border: 1px solid black; border-radius:4px; \
-                                                                        width: 80px; height: 80px;\
+                                                                        width: 70px; height: 70px;\
                                                                         text-align: center; justify-content: center; min-width:{}; \
                                                                         display: flex; align-items: center; color: #000947",space_val);
                                                         let val_click_cb = link.callback(move |_| {
                                                             if string == "SPACE"{
-                                                                Msg::SetBarcodeValue(" ".to_string())
+                                                                Msg::SetLicensePlate(" ".to_string())
                                                             }
                                                             else{
-                                                                Msg::SetBarcodeValue(string.to_string())
+                                                                Msg::SetLicensePlate(string.to_string())
                                                             }
                                                         });
                                                         html!{
@@ -324,11 +323,11 @@ impl Component for BarcodeInputModel {
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
-                                                    <div style="margin-left: 145px">
-                                                        <img width={64} height={64} src="/img/phone-call.png"/>
-                                                    </div>
+                                                    // <div style="margin-left: 145px">
+                                                    //     <img width={64} height={64} src="/img/phone-call.png"/>
+                                                    // </div>
                                                 </div>
-                                                <div class="col-4" onclick={get_contract_cb}>
+                                                <div class="col-4" onclick={next_cb}>
                                                     <div style="margin-right: 30px;float:right">
                                                         <img width={80} height={80} src="/img/buttons/NextArrow.png"/>
                                                     </div>
@@ -338,7 +337,7 @@ impl Component for BarcodeInputModel {
                                         }
                                     }
                                 }
-                            </div>
+                </div>
             </div>
         }
     }
