@@ -10,6 +10,8 @@ pub enum Route {
     LanguageModel,
     #[at("/barcodescan")]
     BarcodeModel,
+    #[at("/retry")]
+    RetryModel
 }
 
 
@@ -18,6 +20,7 @@ fn switch(route: &Route) -> Html {
         Route::Root |
         Route::LanguageModel => html!{ <language::LanguageModel/> },
         Route::BarcodeModel => html!{ <barcode_scan::BarcodeModel/>},
+        Route::RetryModel => html!{<retry::RetryModel />}
     }
 }
 

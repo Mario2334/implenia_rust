@@ -57,10 +57,6 @@ impl Component for BarcodeModel {
 
 
     fn create(_ctx: &Context<Self>) -> Self {
-        // _ctx.link().send_future(async {
-        //     let lang_json = Self::get_language_file().await;
-        //     Msg::GetLanguage(lang_json)
-        // });
         Self {
             barcode_number: "".to_string(),
             my_input: NodeRef::default(),
@@ -106,49 +102,6 @@ impl Component for BarcodeModel {
                     set_barcode(&self.barcode_number.clone());
                     let b = self.barcode_number.clone();
                     _ctx.link().send_future(async move {
-                        match b.starts_with("FW") {
-                            true => {
-                                let license_id = &b[2..];
-                                let url = &format!("{}/api/Transactions/{}/",API_URL,&license_id);
-                                let response = get_request(&url).await;
-                                log::info!("Response {:?}",response.as_ref().unwrap());
-                                if response.as_ref().unwrap().is_null() == false {
-                                    let data = response.unwrap().clone();
-                                    if data["trans_flag"] == 0 {
-                                        let transaction:Transactions = serde_json::from_value(data).unwrap();
-                                        log::info!("{:?}",transaction.clone());
-                                        set_transactions(transaction.clone());
-                                    }
-                                    else{
-                                        let data_null = Transactions::default();
-                                        set_transactions(data_null.clone());
-                                    }
-                                } else{
-                                    let data_null = Transactions::default();
-                                    set_transactions(data_null.clone());
-                                }
-                            }
-                            false => {
-                                let url = &format!("{}/api/ID/?ident={}",API_URL,&b);
-                                // let url = "http://80.152.148.142:9000/api/Contract/";
-                                let response = get_request(&url).await;
-                                log::info!("Respone {:?}",response.as_ref().unwrap().as_array().unwrap().len());
-                                if response.as_ref().unwrap().as_array().unwrap().len() != 0{
-                                    let data = response.unwrap().get_mut(0).unwrap().clone();
-                                    let id:ID = serde_json::from_value(data).unwrap();
-                                    log::info!("{:?}",id.clone());
-                                    set_id(id.clone());
-                                } else{
-                                    let data_null = ID::default();
-                                    set_id(data_null.clone());
-                                }
-                            }
-                        }
-                        let websocket_url = &format!("{}?cmd=GET WEIGHTNM",DEVMAN_URL);
-                        let weight_response = get_request(websocket_url).await;
-                        let weight_data = weight_response.unwrap().clone();
-                        let weight_response:WeightResponse = serde_json::from_value(weight_data).unwrap();
-                        set_weight_detail(weight_response.clone());
                         Msg::NextPage
                     });
                     
@@ -170,7 +123,7 @@ impl Component for BarcodeModel {
                     if get_id().ident == None && get_transactions().id == None {
                         log::info!("Goint to retry");
                         self.is_auftrag_data_loading = false;
-                  //      history.push(Route::RetryModel);
+                        history.push(Route::RetryModel);
                         
                     }   else{
                    //     history.push(Route::WeightViewModel);
@@ -198,7 +151,9 @@ impl Component for BarcodeModel {
 
         html!{
             <div>
-                            <div class="container" style="height: 660px">
+                            <div
+                                class="container" style="height: 660px;-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;">
+
                                 <div class="row" style="margin-top: '10px'">
                                 </div>
                                 <div class="row" style="margin-top: 10px">

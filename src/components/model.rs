@@ -196,3 +196,8 @@ impl Default for DriverSignRequest {
         }
     }
 }
+
+#[derive(Serialize, Deserialize,Clone, Debug)]
+pub struct ErrorHandlerModel {
+    pub message: String
+}
