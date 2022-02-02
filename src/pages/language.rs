@@ -1,43 +1,41 @@
-use std::collections::HashMap;
-use serde_json::Value;
-use yew::prelude::*;
-use web_sys::console;
-use web_sys::console::log_1;
-use crate::components::request::get_request;
-use crate::components::state::{get_global_lang, reset_state, set_global_lang};
-use crate::components::utils::*;
 use crate::components::images;
 use crate::components::popup_messages::error_popup;
+use crate::components::request::get_request;
+use crate::components::state::{get_global_lang, reset_state, set_global_lang};
 use crate::components::utils::set_get::*;
+use crate::components::utils::*;
 use crate::components::websocket::start_websocket;
-
+use serde_json::Value;
+use std::collections::HashMap;
+use web_sys::console;
+use web_sys::console::log_1;
+use yew::prelude::*;
 
 pub enum Msg {
     GetLanguage(serde_json::Value),
-    SetLanguage(&'static str)
+    SetLanguage(&'static str),
 }
 
 pub struct LanguageModel {
     json_lang: serde_json::Value,
-    is_loading: bool
+    is_loading: bool,
 }
 
 impl LanguageModel {
-    async fn get_language_file() -> serde_json::Value{
-        let lang_json = get_request("/language.json").await;
-        log::info!("{}",lang_json.is_ok());
-        return lang_json.unwrap()
+    async fn get_language_file() -> serde_json::Value {
+        let lang_json = get_request("/bin/language.json").await;
+        log::info!("{}", lang_json.is_ok());
+        return lang_json.unwrap();
     }
 
-    fn get_value(&self, value:&str) -> String{
+    fn get_value(&self, value: &str) -> String {
         let lang_json_inst = get_global_lang().clone();
         let val = lang_json_inst.get(get_lang()).and_then(|m| m.get(value));
-        if val.is_none() == false{
-            let a =  val.unwrap().clone();
-            return a.to_string()
-        }
-        else {
-           panic!("Language Setting Not Present")
+        if val.is_none() == false {
+            let a = val.unwrap().clone();
+            return a.to_string();
+        } else {
+            panic!("Language Setting Not Present")
         }
     }
 }
@@ -45,7 +43,6 @@ impl LanguageModel {
 impl Component for LanguageModel {
     type Message = Msg;
     type Properties = ();
-
 
     fn create(_ctx: &Context<Self>) -> Self {
         reset_state();
@@ -56,7 +53,7 @@ impl Component for LanguageModel {
         });
         Self {
             json_lang: Value::Null,
-            is_loading:false
+            is_loading: false,
         }
     }
 
@@ -66,7 +63,7 @@ impl Component for LanguageModel {
                 set_global_lang(lang_json);
                 self.is_loading = false;
                 true
-            },
+            }
             Msg::SetLanguage(str) => {
                 set_lang(str.clone());
                 true
@@ -79,83 +76,83 @@ impl Component for LanguageModel {
         let link = ctx.link();
         // start_websocket();
         html! {
-            <div class="container">
-                <div class="row" style="margin-top: 10px">
-                        // <p>{"Test"}</p>
-                </div>
-            {
-            if self.is_loading == false {
-                    html!{
-                        <>
-                        <div class="row" style="margin-top: 10px">
-                            <div style=" display: flex; flex-direction: row;width:100% ">
-                                <div>
-                                    // <img width=64 height=64 src="img/phone-call.png"/>
-                                    <div width=64 height=64/>
-                                </div>
-                                <div style="width: 250px; margin-left:355px;\
-                                            margin-right:auto; text-align: center">
-                                    // <img width=150 height=70 src="img/evo.png" />
-                                    
-                                </div>
-                                <div>
-                                    <img width=150 height=70 src="/img/Logo.png"/>
+                <div class="container">
+                    <div class="row" style="margin-top: 10px">
+                            // <p>{"Test"}</p>
+                    </div>
+                {
+                if self.is_loading == false {
+                        html!{
+                            <>
+                            <div class="row" style="margin-top: 10px">
+                                <div style=" display: flex; flex-direction: row;width:100% ">
+                                    <div>
+                                        // <img width=64 height=64 src="img/phone-call.png"/>
+                                        <div width=64 height=64/>
+                                    </div>
+                                    <div style="width: 250px; margin-left:355px;\
+                                                margin-right:auto; text-align: center">
+                                        // <img width=150 height=70 src="img/evo.png" />
+
+                                    </div>
+                                    <div>
+                                        <img width=150 height=70 src="/img/Logo.png"/>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row" style="margin-top: 20px;align-items: center;margin-left: 60px">
-                            {
-                                images::get_images1().into_iter().map(|image_stores1|{
-                                html!{
-                                    <images::ImageStore
-                                    src={image_stores1.src}
-                                    width=1
-                                    height=1
-                                    language={image_stores1.language}
-                                    >
-                                    </images::ImageStore>
-                                }
-                            }).collect::<Html>()
-                            }
-                        </div>
-                        <div class="row" style="margin-top: 0px;align-items: center;margin-left: 60px">
-                            {
-                                images::get_images2().into_iter().map(|image_stores2|{
+                            <div class="row" style="margin-top: 20px;align-items: center;margin-left: 60px">
+                                {
+                                    images::get_images1().into_iter().map(|image_stores1|{
                                     html!{
                                         <images::ImageStore
-                                        src={image_stores2.src}
+                                        src={image_stores1.src}
                                         width=1
                                         height=1
-                                        language={image_stores2.language}
+                                        language={image_stores1.language}
                                         >
                                         </images::ImageStore>
                                     }
-                                    }).collect::<Html>()
+                                }).collect::<Html>()
                                 }
-                        </div>
-                        <div class="row" style="margin-top: 0px;align-items: center;margin-left: 220px">
-                            {
-                                images::get_images3().into_iter().map(|image_stores3|{
-                                    html!{
-                                        <images::ImageStore
-                                        src={image_stores3.src}
-                                        width=1
-                                        height=1
-                                        language={image_stores3.language}
-                                        >
-                                        </images::ImageStore>
+                            </div>
+                            <div class="row" style="margin-top: 0px;align-items: center;margin-left: 60px">
+                                {
+                                    images::get_images2().into_iter().map(|image_stores2|{
+                                        html!{
+                                            <images::ImageStore
+                                            src={image_stores2.src}
+                                            width=1
+                                            height=1
+                                            language={image_stores2.language}
+                                            >
+                                            </images::ImageStore>
+                                        }
+                                        }).collect::<Html>()
                                     }
-                                    }).collect::<Html>()
-                                }
-                        </div>
-                    </>
+                            </div>
+                            <div class="row" style="margin-top: 0px;align-items: center;margin-left: 220px">
+                                {
+                                    images::get_images3().into_iter().map(|image_stores3|{
+                                        html!{
+                                            <images::ImageStore
+                                            src={image_stores3.src}
+                                            width=1
+                                            height=1
+                                            language={image_stores3.language}
+                                            >
+                                            </images::ImageStore>
+                                        }
+                                        }).collect::<Html>()
+                                    }
+                            </div>
+                        </>
+                }
+                        }
+            else {
+                html!{}
             }
                     }
-        else {
-            html!{}
+           </div>
         }
-                }
-       </div>
-    }
     }
 }

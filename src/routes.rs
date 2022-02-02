@@ -1,5 +1,10 @@
+use std::collections::HashMap;
 use std::default;
 
+use crate::components::constants::API_URL;
+use crate::components::model::{Token, User};
+use crate::components::request::post_request;
+use crate::components::state::{get_token, set_token};
 use crate::pages::*;
 use yew::{function_component, html, Html};
 use yew_router::*;
@@ -44,6 +49,18 @@ fn switch(route: &Route) -> Html {
 
 #[function_component(Root)]
 pub fn root() -> Html {
+    if get_token() == "".to_string() {
+        let url = format!("{}api-token-auth", API_URL);
+        let mut user = User::default();
+        user.username = "admin@admin.com".to_string();
+        user.password = "admin".to_string();
+        let body = serde_json::to_string(&user).unwrap();
+        wasm_bindgen_futures::spawn_local(async move {
+            let result = post_request(&url, &body).await.unwrap();
+            let token: Token = serde_json::from_value(result).unwrap();
+            set_token(token.token);
+        })
+    }
     html! {
         <BrowserRouter>
             <Switch<Route> render={Switch::render(switch)}/>
