@@ -1,5 +1,5 @@
 use crate::components::constants::*;
-use crate::components::model::{LicensePlateResponse, Transactions, WeightResponse, ID};
+use crate::components::model::{LicensePlateResponse, Transactions, WeightResponse, ID, ErrorHandlerModel};
 use crate::components::request::get_request;
 use crate::components::state::get_global_lang;
 use crate::components::state::*;
@@ -13,6 +13,12 @@ use yew::prelude::*;
 use yew_router::history::History;
 use yew_router::prelude::RouterScopeExt;
 
+pub enum RouteType {
+    Manual,
+    LicensePlate,
+    WeightInput
+}
+
 pub struct BarcodeModel {
     barcode_number: String,
     my_input: NodeRef,
@@ -25,7 +31,8 @@ pub enum Msg {
     GotHome,
     InputChanged,
     ManualBarcode,
-    NextPage,
+    NextPage(RouteType),
+    ErrorPage(String)
 }
 
 impl BarcodeModel {
@@ -90,9 +97,16 @@ impl Component for BarcodeModel {
                         serde_json::from_value(weight_data).unwrap();
                     set_licence_plate(license_plate_response.license_plate.unwrap());
 
-                    Msg::NextPage
+                    Msg::NextPage(RouteType::Manual)
                 });
                 true
+            }
+
+            Msg::ErrorPage(error) => {
+                let history = _ctx.link().history().unwrap();
+                let error_query = ErrorHandlerModel{message:self.get_value(error.as_str()).to_string()};
+                history.push_with_query(Route::RetryModel,error_query);
+                false
             }
 
             Msg::InputChanged => {
@@ -104,54 +118,35 @@ impl Component for BarcodeModel {
                     set_barcode(&self.barcode_number.clone());
                     let b = self.barcode_number.clone();
                     _ctx.link().send_future(async move {
-                        match b.starts_with("FW") {
-                            true => {
-                                let license_id = &b[2..];
-                                let url = &format!("{}/api/Transactions/{}/", API_URL, &license_id);
-                                let response = get_request(&url).await;
-                                log::info!("Response {:?}", response.as_ref().unwrap());
-                                if response.as_ref().unwrap().is_null() == false {
-                                    let data = response.unwrap().clone();
-                                    if data["trans_flag"] == 0 {
-                                        let transaction: Transactions =
-                                            serde_json::from_value(data).unwrap();
-                                        log::info!("{:?}", transaction.clone());
-                                        set_transactions(transaction.clone());
-                                    } else {
-                                        let data_null = Transactions::default();
-                                        set_transactions(data_null.clone());
-                                    }
-                                } else {
-                                    let data_null = Transactions::default();
-                                    set_transactions(data_null.clone());
-                                }
-                            }
-                            false => {
-                                let url = &format!("{}/api/ID/?ident={}", API_URL, &b);
-                                // let url = "http://80.152.148.142:9000/api/Contract/";
-                                let response = get_request(&url).await;
-                                log::info!(
-                                    "Respone {:?}",
+                        let url = &format!("{}/api/ID/?ident={}", API_URL, &b);
+                        // let url = "http://80.152.148.142:9000/api/Contract/";
+                        let response = get_request(&url).await;
+                        log::info!(
+                                    "Response {:?}",
                                     response.as_ref().unwrap().as_array().unwrap().len()
                                 );
-                                if response.as_ref().unwrap().as_array().unwrap().len() != 0 {
-                                    let data = response.unwrap().get_mut(0).unwrap().clone();
-                                    let id: ID = serde_json::from_value(data).unwrap();
-                                    log::info!("{:?}", id.clone());
-                                    set_id(id.clone());
-                                } else {
-                                    let data_null = ID::default();
-                                    set_id(data_null.clone());
-                                }
+                        if response.as_ref().unwrap().as_array().unwrap().len() != 0 {
+                            let data = response.unwrap().get_mut(0).unwrap().clone();
+                            let id: ID = serde_json::from_value(data).unwrap();
+                            log::info!("{:?}", id.clone());
+                            set_id(id.clone());
+                            if id.vehicle.is_none(){
+                                Msg::NextPage(RouteType::LicensePlate)
                             }
+                            else {
+                                let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                                let weight_response = get_request(websocket_url).await;
+                                let weight_data = weight_response.unwrap().clone();
+                                let weight_response: WeightResponse =
+                                    serde_json::from_value(weight_data).unwrap();
+                                set_weight_detail(weight_response.clone());
+                                Msg::NextPage(RouteType::WeightInput)
+                            }
+                        } else {
+                            // let data_null = ID::default();
+                            // set_id(data_null.clone());
+                            Msg::ErrorPage("error_connecting_server".to_string())
                         }
-                        let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
-                        let weight_response = get_request(websocket_url).await;
-                        let weight_data = weight_response.unwrap().clone();
-                        let weight_response: WeightResponse =
-                            serde_json::from_value(weight_data).unwrap();
-                        set_weight_detail(weight_response.clone());
-                        Msg::NextPage
                     });
 
                     return true;
@@ -160,21 +155,33 @@ impl Component for BarcodeModel {
                 }
             }
 
-            Msg::NextPage => {
+            Msg::NextPage(route_type) => {
                 let history = _ctx.link().history().unwrap();
-                if self.manual {
-                    history.push(Route::LicensePlateViewModel);
-                    return false;
-                } else {
-                    if get_id().ident == None && get_transactions().id == None {
-                        log::info!("Goint to retry");
-                        self.is_auftrag_data_loading = false;
-                        history.push(Route::RetryModel);
-                    } else {
+                match route_type {
+                    RouteType::Manual=>{
+                        history.push(Route::LicensePlateViewModel);
+                    }
+                    RouteType::LicensePlate => {
+                        history.push(Route::LicensePlateViewModel);
+                    }
+                    RouteType::WeightInput => {
                         history.push(Route::WeightViewModel);
                     }
-                    return false;
                 }
+                return false
+                // if self.manual {
+                //     history.push(Route::LicensePlateViewModel);
+                //     return false;
+                // } else {
+                //     if get_id().ident == None && get_transactions().id == None {
+                //         log::info!("Goint to retry");
+                //         self.is_auftrag_data_loading = false;
+                //         history.push(Route::RetryModel);
+                //     } else {
+                //         history.push(Route::WeightViewModel);
+                //     }
+                //     return false;
+                // }
             }
         }
     }
