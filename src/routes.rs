@@ -31,6 +31,8 @@ pub enum Route {
     SignatureModel,
     #[at("/retry")]
     RetryModel,
+    #[at("/selectvehicle")]
+    SelectVehicle,
 }
 
 fn switch(route: &Route) -> Html {
@@ -44,11 +46,13 @@ fn switch(route: &Route) -> Html {
         Route::ThankYouModel => html! {<thankyou::ThankYouModel />},
         Route::SignatureModel => html! {<signature::SignatureModel />},
         Route::RetryModel => html! {<retry::RetryModel />},
+        Route::SelectVehicle => html! {<vehicle::SelectVehicle/>},
     }
 }
 
 #[function_component(Root)]
 pub fn root() -> Html {
+    /*
     if get_token() == "".to_string() {
         let url = format!("{}api-token-auth", API_URL);
         let mut user = User::default();
@@ -60,7 +64,7 @@ pub fn root() -> Html {
             let token: Token = serde_json::from_value(result).unwrap();
             set_token(token.token);
         })
-    }
+    }*/
     html! {
         <BrowserRouter>
             <Switch<Route> render={Switch::render(switch)}/>

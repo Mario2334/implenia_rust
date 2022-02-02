@@ -1,5 +1,7 @@
 use crate::components::constants::*;
-use crate::components::model::{LicensePlateResponse, Transactions, WeightResponse, ID, ErrorHandlerModel};
+use crate::components::model::{
+    ErrorHandlerModel, LicensePlateResponse, Transactions, WeightResponse, ID,
+};
 use crate::components::request::get_request;
 use crate::components::state::get_global_lang;
 use crate::components::state::*;
@@ -16,7 +18,7 @@ use yew_router::prelude::RouterScopeExt;
 pub enum RouteType {
     Manual,
     LicensePlate,
-    WeightInput
+    WeightInput,
 }
 
 pub struct BarcodeModel {
@@ -32,7 +34,7 @@ pub enum Msg {
     InputChanged,
     ManualBarcode,
     NextPage(RouteType),
-    ErrorPage(String)
+    ErrorPage(String),
 }
 
 impl BarcodeModel {
@@ -90,12 +92,12 @@ impl Component for BarcodeModel {
                 self.manual = true;
                 _ctx.link().send_future(async {
                     // start_websocket();
-                    let websocket_url = &format!("{}?cmd=GET PLATE", DEVMAN_URL);
+                    /*let websocket_url = &format!("{}?cmd=GET PLATE", DEVMAN_URL);
                     let weight_response = get_request(websocket_url).await;
                     let weight_data = weight_response.unwrap().clone();
                     let license_plate_response: LicensePlateResponse =
                         serde_json::from_value(weight_data).unwrap();
-                    set_licence_plate(license_plate_response.license_plate.unwrap());
+                    set_licence_plate(license_plate_response.license_plate.unwrap());*/
 
                     Msg::NextPage(RouteType::Manual)
                 });
@@ -104,8 +106,10 @@ impl Component for BarcodeModel {
 
             Msg::ErrorPage(error) => {
                 let history = _ctx.link().history().unwrap();
-                let error_query = ErrorHandlerModel{message:self.get_value(error.as_str()).to_string()};
-                history.push_with_query(Route::RetryModel,error_query);
+                let error_query = ErrorHandlerModel {
+                    message: self.get_value(error.as_str()).to_string(),
+                };
+                history.push_with_query(Route::RetryModel, error_query);
                 false
             }
 
@@ -122,18 +126,17 @@ impl Component for BarcodeModel {
                         // let url = "http://80.152.148.142:9000/api/Contract/";
                         let response = get_request(&url).await;
                         log::info!(
-                                    "Response {:?}",
-                                    response.as_ref().unwrap().as_array().unwrap().len()
-                                );
+                            "Response {:?}",
+                            response.as_ref().unwrap().as_array().unwrap().len()
+                        );
                         if response.as_ref().unwrap().as_array().unwrap().len() != 0 {
                             let data = response.unwrap().get_mut(0).unwrap().clone();
                             let id: ID = serde_json::from_value(data).unwrap();
                             log::info!("{:?}", id.clone());
                             set_id(id.clone());
-                            if id.vehicle.is_none(){
+                            if id.vehicle.is_none() {
                                 Msg::NextPage(RouteType::LicensePlate)
-                            }
-                            else {
+                            } else {
                                 let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
                                 let weight_response = get_request(websocket_url).await;
                                 let weight_data = weight_response.unwrap().clone();
@@ -158,7 +161,7 @@ impl Component for BarcodeModel {
             Msg::NextPage(route_type) => {
                 let history = _ctx.link().history().unwrap();
                 match route_type {
-                    RouteType::Manual=>{
+                    RouteType::Manual => {
                         history.push(Route::LicensePlateViewModel);
                     }
                     RouteType::LicensePlate => {
@@ -168,7 +171,7 @@ impl Component for BarcodeModel {
                         history.push(Route::WeightViewModel);
                     }
                 }
-                return false
+                return false;
                 // if self.manual {
                 //     history.push(Route::LicensePlateViewModel);
                 //     return false;

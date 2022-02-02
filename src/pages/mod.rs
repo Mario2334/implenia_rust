@@ -6,4 +6,5 @@ pub(crate) mod license_plate_view;
 pub(crate) mod retry;
 pub(crate) mod signature;
 pub(crate) mod thankyou;
+pub(crate) mod vehicle;
 pub(crate) mod weight_view;
