@@ -59,7 +59,7 @@ impl Component for LicensePlateView {
             }
             Msg::NextPage => {
                 let history = _ctx.link().history().unwrap();
-                history.push(Route::WeightViewModel);
+                history.push(Route::SelectVehicle);
                 true
             }
             Msg::PreviousPage => {
@@ -108,7 +108,7 @@ impl Component for LicensePlateView {
         if self.loading {
             let b = self.license_plate.clone();
             ctx.link().send_future(async move {
-                let license_url = &format!("{}api/Vehicle-View/?license_plate={}", API_URL, &b);
+                /*let license_url = &format!("{}api/Vehicle-View/?license_plate={}", API_URL, &b);
                 let license_response = get_request(&license_url).await;
 
                 if license_response.as_ref().unwrap().get(0) != None {
@@ -145,6 +145,7 @@ impl Component for LicensePlateView {
                 let weight_data = weight_response.unwrap().clone();
                 let weight_response: WeightResponse = serde_json::from_value(weight_data).unwrap();
                 set_weight_detail(weight_response.clone());
+                */
                 Msg::NextPage
             });
         }

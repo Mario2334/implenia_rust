@@ -3,34 +3,33 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[derive(Default)]
-pub struct SelectVehicle {
-    vehicle: String,
-    vehicle_list: Vec<String>,
+pub struct SelectContract {
+    contract: String,
+    contract_list: Vec<String>,
     flitered_list: Vec<String>,
 }
 pub enum Msg {
-    SelectVehicle(&'static str),
+    SelectContract(&'static str),
     GotHome,
     NextPage,
     PreviousPage,
-    AddVehicle,
 }
 
-impl Component for SelectVehicle {
+impl Component for SelectContract {
     type Message = Msg;
     type Properties = ();
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            vehicle: "".to_string(),
-            vehicle_list: vec!["Vehicle_1".to_string(), "Vehicle_2".to_string()],
-            flitered_list: vec!["Vehicle_1".to_string(), "Vehicle_2".to_string()],
+            contract: "".to_string(),
+            contract_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
+            flitered_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
         }
     }
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::NextPage => {
                 let history = _ctx.link().history().unwrap();
-                history.push(Route::SelectContract);
+                history.push(Route::SelectMaterial);
                 true
             }
             Msg::PreviousPage => {
@@ -43,38 +42,27 @@ impl Component for SelectVehicle {
                 history.push(Route::Root);
                 true
             }
-            Msg::SelectVehicle(x) => {
+            Msg::SelectContract(x) => {
                 if x == String::from("<-") {
-                    self.vehicle.pop();
+                    self.contract.pop();
                 } else {
-                    self.vehicle += &*x;
+                    self.contract += &*x;
                 }
                 self.flitered_list = Vec::new();
 
-                let m = self.vehicle.len();
+                let m = self.contract.len();
 
-                for i in &self.vehicle_list {
+                for i in &self.contract_list {
                     if i.len() >= m {
                         let temp = &i[..m];
                         log::info!("{}", temp.clone());
-                        if self.vehicle == temp {
+                        if self.contract == temp {
                             self.flitered_list.push(i.clone());
                         }
                     }
                 }
 
                 true
-            }
-            Msg::AddVehicle => {
-                if self.vehicle != "" {
-                    log::info!("{}", self.vehicle.clone());
-                    self.vehicle_list.push(String::from(self.vehicle.clone()));
-                    self.vehicle = "".to_string();
-                    self.flitered_list = self.vehicle_list.clone();
-                    true
-                } else {
-                    false
-                }
             }
         }
     }
@@ -87,7 +75,6 @@ impl Component for SelectVehicle {
         let key_four_line = vec!["Y", "X", "C", "V", "B", "N", "M", "Ü", ".", "SPACE"];
         //let all_line = vec![key_one_line, key_two_line, key_three_line, key_four_line];
         let home_cb = link.callback(move |_| Msg::GotHome);
-        let add_cb = link.callback(move |_| Msg::AddVehicle);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let next_cb = link.callback(move |_| Msg::NextPage);
 
@@ -116,9 +103,7 @@ impl Component for SelectVehicle {
 
                 <div class="row mt-4">
                     <input class="col-auto" style="border-radius:15px;width:1000px;height:50px;border: 1px solid black"
-                        value={self.vehicle.clone()} />
-                    <button class="col-auto ml-2" style="border-radius:7px;background:#000947;color:white"
-                        onclick={add_cb}>{"Add new"}</button>
+                        value={self.contract.clone()} />
                 </div>
 
                 <div class="row mt-3">
@@ -144,7 +129,7 @@ impl Component for SelectVehicle {
                             spacing = "margin-left: -20px";
                         }
                         let val_click_cb = link.callback(move |_| {
-                            Msg::SelectVehicle(string)
+                            Msg::SelectContract(string)
                         });
                         html!{
                         <div class="col" style={spacing} onclick={val_click_cb}>
@@ -171,7 +156,7 @@ impl Component for SelectVehicle {
                             spacing = "margin-left: -20px";
                         }
                         let val_click_cb = link.callback(move |_| {
-                            Msg::SelectVehicle(string)
+                            Msg::SelectContract(string)
                         });
                         html!{
                         <div class="col" style={spacing} onclick={val_click_cb}>
@@ -198,7 +183,7 @@ impl Component for SelectVehicle {
                             spacing = "margin-left: -20px";
                         }
                         let val_click_cb = link.callback(move |_| {
-                            Msg::SelectVehicle(string)
+                            Msg::SelectContract(string)
                         });
                         html!{
                         <div class="col" style={spacing} onclick={val_click_cb}>
@@ -234,10 +219,10 @@ impl Component for SelectVehicle {
                         display: flex; align-items: center; color: #000947",space_val);
                         let val_click_cb = link.callback(move |_| {
                             if string == "SPACE"{
-                                Msg::SelectVehicle(" ")
+                                Msg::SelectContract(" ")
                             }
                             else{
-                                Msg::SelectVehicle(string)
+                                Msg::SelectContract(string)
                             }
                         });
                         html!{

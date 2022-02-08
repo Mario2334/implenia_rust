@@ -1,15 +1,14 @@
 #![feature(async_await)]
+use crate::components::constants::*;
+use crate::components::request::get_request;
+use crate::components::state::*;
+use crate::components::utils::set_get::*;
+use crate::routes::Route;
 use serde_json::Value;
+use wasm_bindgen::{JsCast, JsValue};
 use yew::prelude::*;
 use yew_router::history::History;
 use yew_router::prelude::RouterScopeExt;
-use crate::components::request::get_request;
-use crate::routes::Route;
-use crate::components::state::*;
-use crate::components::utils::set_get::*;
-use wasm_bindgen::{JsCast, JsValue};
-use crate::components::constants::*;
-
 
 pub enum Msg {
     SetLanguage(&'static str),
@@ -20,34 +19,33 @@ pub enum Msg {
 }
 
 pub struct LicensePlateModel {
-    license_plate:String,
+    license_plate: String,
     loading: bool,
     error: bool,
-    contract_data: serde_json::Value
+    contract_data: serde_json::Value,
 }
 
 impl LicensePlateModel {
-    async fn get_language_file() -> serde_json::Value{
+    async fn get_language_file() -> serde_json::Value {
         let lang_json = get_request("/bin/language.json").await;
-        return lang_json.unwrap()
+        return lang_json.unwrap();
     }
 
-    fn get_value(&self, value:&str) -> String{
+    fn get_value(&self, value: &str) -> String {
         let lang_json_inst = get_global_lang().clone();
         let val = lang_json_inst.get(get_lang()).and_then(|m| m.get(value));
-        log::info!("{}",value);
-        if val.is_none() == false{
-            let a =  val.unwrap().clone();
-            return a.to_string().replace('"',"")
-        }
-        else {
+        log::info!("{}", value);
+        if val.is_none() == false {
+            let a = val.unwrap().clone();
+            return a.to_string().replace('"', "");
+        } else {
             panic!("Language Setting Not Present")
         }
     }
-    async fn get_contract_detail(contract_number: &str) -> serde_json::Value{
-        let url: &str = &format!("{}/api/Contract/{}/",API_URL,contract_number);
+    async fn get_contract_detail(contract_number: &str) -> serde_json::Value {
+        let url: &str = &format!("{}/api/Contract/{}/", API_URL, contract_number);
         let res = get_request(&url).await;
-        return res.unwrap()
+        return res.unwrap();
     }
 }
 
@@ -73,36 +71,34 @@ impl Component for LicensePlateModel {
             Msg::SetLanguage(str) => {
                 set_lang(str.clone());
                 true
-            },
-            Msg::GotHome =>{
+            }
+            Msg::GotHome => {
                 let history = _ctx.link().history().unwrap();
                 history.push(Route::Root);
                 true
             }
-            Msg::SetLicensePlate(license_plate_val) =>{
+            Msg::SetLicensePlate(license_plate_val) => {
                 if license_plate_val == String::from("<-") {
                     self.license_plate.pop();
-                }
-                else {
+                } else {
                     self.license_plate += &*license_plate_val;
                 }
                 true
             }
-            Msg::GetContractDetail(val)=>{
-                if val["contract_number"] != Value::Null{
+            Msg::GetContractDetail(val) => {
+                if val["contract_number"] != Value::Null {
                     self.loading = false;
                     self.contract_data = val;
-                } else{
+                } else {
                     self.loading = true;
                     self.error = true;
                 }
                 true
             }
 
-            Msg::GoBack =>{
-                
-                for n in 1..10000000{
-                    println!("Sleep {}",n);
+            Msg::GoBack => {
+                for n in 1..10000000 {
+                    println!("Sleep {}", n);
                 }
                 let history = _ctx.link().history().unwrap();
                 history.push(Route::BarcodeModel);
@@ -125,18 +121,18 @@ impl Component for LicensePlateModel {
         ";
 
         let link = ctx.link();
-        let home_cb = link.callback(move |_| Msg::GotHome );
+        let home_cb = link.callback(move |_| Msg::GotHome);
 
         let lang_json_file = get_global_lang().clone();
-        log::info!("{}",lang_json_file);
+        log::info!("{}", lang_json_file);
 
         if lang_json_file.is_null() {
             let history = ctx.link().history().unwrap();
             history.push(Route::LanguageModel);
-            return html!{<div></div>}
+            return html! {<div></div>};
         }
 
-        html!{
+        html! {
             <div>
                 <div class="container" style="height: 660px">
                     <div class="row" style="margin-top: '10px'">
@@ -147,7 +143,7 @@ impl Component for LicensePlateModel {
                         </div>
                         <div style="width: 250px;margin-left: auto;margin-right: auto;text-align: center;">
                             //<img width=150 height=70 src="/img/evo.png"/>
-                            
+
                         </div>
                         <div>
                             <img width=150 height=70 src="/img/Logo.png"/>
@@ -156,10 +152,10 @@ impl Component for LicensePlateModel {
                     if self.loading == true{
                         <div class="row">
                             <div class="col-md-12 text-center">
-                                
+
                                 if self.error == false{
-                                    <label 
-                                    style="font-size:50px; 
+                                    <label
+                                    style="font-size:50px;
                                     margin-top:200px; 
                                     font-weight: bold; 
                                     color: #000947;">
@@ -167,14 +163,14 @@ impl Component for LicensePlateModel {
                                     </label>
                                 } else{
                                     <label
-                                    style="font-size:50px; 
+                                    style="font-size:50px;
                                     margin-top:200px; 
                                     font-weight: bold; 
                                     color: red;">
                                         { self.get_value("retry_butt") }
                                     </label>
                                 }
-                                
+
                             </div>
                         </div>
                     } else{

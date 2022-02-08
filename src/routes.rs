@@ -33,6 +33,10 @@ pub enum Route {
     RetryModel,
     #[at("/selectvehicle")]
     SelectVehicle,
+    #[at("/selectcontract")]
+    SelectContract,
+    #[at("/selectmaterial")]
+    SelectMaterial,
 }
 
 fn switch(route: &Route) -> Html {
@@ -47,6 +51,8 @@ fn switch(route: &Route) -> Html {
         Route::SignatureModel => html! {<signature::SignatureModel />},
         Route::RetryModel => html! {<retry::RetryModel />},
         Route::SelectVehicle => html! {<vehicle::SelectVehicle/>},
+        Route::SelectContract => html! {<contract::SelectContract/>},
+        Route::SelectMaterial => html! {<material::SelectMaterial/>},
     }
 }
 
