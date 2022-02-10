@@ -1,28 +1,50 @@
+use web_sys::history;
 use crate::routes::Route;
 use yew::prelude::*;
 use yew_router::prelude::*;
+use crate::components::constants::API_URL;
+use crate::components::model::Contract;
+use crate::components::request::get_request;
+use crate::components::state::{get_global_lang, set_contract};
 
 #[derive(Default)]
 pub struct SelectContract {
     contract: String,
-    contract_list: Vec<String>,
-    flitered_list: Vec<String>,
+    contract_list: Vec<Contract>,
+    flitered_list: Vec<Contract>,
 }
 pub enum Msg {
     SelectContract(&'static str),
+    SetContractList(Vec<Contract>),
     GotHome,
     NextPage,
     PreviousPage,
+    SetContract
+}
+
+impl SelectContract {
+    async fn get_contracts() -> Vec<Contract> {
+        let url = &format!("{}/api/Contract/",API_URL);
+        let response = get_request(url).await;
+        let contracts:Vec<Contract> = serde_json::from_value(response.unwrap()).unwrap();
+        return contracts;
+    }
 }
 
 impl Component for SelectContract {
     type Message = Msg;
     type Properties = ();
     fn create(_ctx: &Context<Self>) -> Self {
+        _ctx.link().send_future(async {
+            let contracts = Self::get_contracts().await;
+            Msg::SetContractList(contracts)
+        });
         Self {
             contract: "".to_string(),
-            contract_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
-            flitered_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
+            // contract_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
+            // flitered_list: vec!["Contract_1".to_string(), "Contract_2".to_string()],
+            contract_list: vec![],
+            flitered_list: vec![],
         }
     }
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -42,6 +64,17 @@ impl Component for SelectContract {
                 history.push(Route::Root);
                 true
             }
+            Msg::SetContractList(contracts) =>{
+                self.contract_list = contracts.clone();
+                self.flitered_list = contracts;
+                true
+            }
+            Msg::SetContract => {
+                let history = _ctx.link().history().unwrap();
+                let contract = self.flitered_list.get(1).unwrap().into();
+                set_contract(contract);
+                history.push(Route::SelectMaterial)
+            }
             Msg::SelectContract(x) => {
                 if x == String::from("<-") {
                     self.contract.pop();
@@ -52,9 +85,9 @@ impl Component for SelectContract {
 
                 let m = self.contract.len();
 
-                for i in &self.contract_list {
-                    if i.len() >= m {
-                        let temp = &i[..m];
+                for i in self.contract_list.clone() {
+                    if i.contract_number.len() >= m {
+                        let temp = &i.contract_number[..m];
                         log::info!("{}", temp.clone());
                         if self.contract == temp {
                             self.flitered_list.push(i.clone());
@@ -77,8 +110,18 @@ impl Component for SelectContract {
         let home_cb = link.callback(move |_| Msg::GotHome);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let next_cb = link.callback(move |_| Msg::NextPage);
+        let set_contract = link.callback({
 
-        let render_item = |x: String| -> Html {
+        });
+
+        let lang_json_file = get_global_lang().clone();
+        if lang_json_file.is_null() {
+            let history = ctx.link().history().unwrap();
+            history.push(Route::LanguageModel);
+            return html! {<div></div>};
+        }
+
+        let render_item = |x: String,idx: usize| -> Html {
             html! {
                 <>
                         <div class = "row p-2" style = "height:100%">
@@ -111,7 +154,7 @@ impl Component for SelectContract {
                     <div class="col-auto" style="border-radius:15px;width:1000px;height:170px;border: 1px solid black;overflow:auto">
 
                         {
-                            for self.flitered_list.iter().map(|st| render_item(st.clone()))
+                            for self.flitered_list.iter().enumerate().map(|(i,st)| render_item(st.contract_number.clone(),i))
                         }
 
                     </div>
