@@ -1,2 +1,2 @@
-pub const API_URL: &str = "http://80.152.148.142:8500/";
-pub const DEVMAN_URL: &str = "http://80.152.148.142:8500/scale_data/";
+pub const API_URL: &str = "http://127.0.0.1:8000";
+pub const DEVMAN_URL: &str = "http://127.0.0.1:8000/scale_data/";

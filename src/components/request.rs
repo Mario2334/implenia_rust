@@ -3,6 +3,7 @@ use js_sys::Map;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::time::Duration;
+use js_sys::Math::log;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
@@ -45,6 +46,11 @@ async fn send_request(url: &str, opts: &RequestInit, method: String) -> Result<R
             .headers()
             .set("Content-Type", "application/json")
             .unwrap();
+    }
+
+    let token = get_token();
+    if token != "" {
+        request.headers().set("Authorization",&format!("Token {}",token.as_str())).unwrap();
     }
 
     let window = web_sys::window().unwrap();

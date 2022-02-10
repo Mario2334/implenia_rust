@@ -206,7 +206,15 @@ pub struct User {
     pub password: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Token {
     pub token: String,
+}
+
+impl Default for Token {
+    fn default() -> Self {
+        Token{
+            token: "".to_string()
+        }
+    }
 }

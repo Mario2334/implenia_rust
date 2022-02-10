@@ -1,15 +1,18 @@
 use crate::components::images;
 use crate::components::popup_messages::error_popup;
-use crate::components::request::get_request;
-use crate::components::state::{get_global_lang, reset_state, set_global_lang};
+use crate::components::request::{get_request, post_request};
+use crate::components::state::{get_global_lang, reset_state, set_global_lang, set_token};
 use crate::components::utils::set_get::*;
 use crate::components::utils::*;
 use crate::components::websocket::start_websocket;
 use serde_json::Value;
 use std::collections::HashMap;
+// use js_sys::Intl::format;
 use web_sys::console;
 use web_sys::console::log_1;
 use yew::prelude::*;
+use crate::components::constants::API_URL;
+use crate::components::model::{Token, User};
 
 pub enum Msg {
     GetLanguage(serde_json::Value),
@@ -38,6 +41,18 @@ impl LanguageModel {
             panic!("Language Setting Not Present")
         }
     }
+
+    async fn authenticate() {
+        let url = format!("{}/api-token-auth",API_URL);
+        let user = User {
+            username: "admin@admin.com".to_string(),
+            password: "admin".to_string()
+        };
+        let body = serde_json::to_string(&user).unwrap();
+        let response = post_request(url.as_str(),body.as_str()).await;
+        let token:Token = serde_json::from_value(response.unwrap()).unwrap();
+        set_token(token.token);
+    }
 }
 
 impl Component for LanguageModel {
@@ -49,6 +64,7 @@ impl Component for LanguageModel {
         // error_popup();
         _ctx.link().send_future(async {
             let lang_json = Self::get_language_file().await;
+            Self::authenticate().await;
             Msg::GetLanguage(lang_json)
         });
         Self {
