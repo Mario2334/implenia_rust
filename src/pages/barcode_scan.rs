@@ -19,6 +19,7 @@ pub enum RouteType {
     Manual,
     LicensePlate,
     WeightInput,
+    ProcessDirection
 }
 
 pub struct BarcodeModel {
@@ -149,6 +150,7 @@ impl Component for BarcodeModel {
                                 if id.vehicle.is_none() {
                                     return Msg::NextPage(RouteType::LicensePlate);
                                 }
+                                return Msg::NextPage(RouteType::ProcessDirection)
                             }
                             let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
                             let weight_response = get_request(websocket_url).await;
@@ -182,6 +184,9 @@ impl Component for BarcodeModel {
                     }
                     RouteType::WeightInput => {
                         history.push(Route::WeightViewModel);
+                    }
+                    RouteType::ProcessDirection => {
+                        history.push(Route::ProcessDirection);
                     }
                 }
                 return false;

@@ -37,6 +37,9 @@ pub enum Route {
     SelectContract,
     #[at("/selectmaterial")]
     SelectMaterial,
+    #[at("/processdirection")]
+    ProcessDirection,
+
 }
 
 fn switch(route: &Route) -> Html {
@@ -53,6 +56,7 @@ fn switch(route: &Route) -> Html {
         Route::SelectVehicle => html! {<vehicle::SelectVehicle/>},
         Route::SelectContract => html! {<contract::SelectContract/>},
         Route::SelectMaterial => html! {<material::SelectMaterial/>},
+        Route::ProcessDirection => html! {<process_direction::ProcessModel/>}
     }
 }
 
