@@ -111,11 +111,12 @@ impl Component for WeightViewModel {
             ctx.link().send_future(async {
                 let weight_detail = get_weight_detail();
                 let id_detail = get_id();
+                let mut transactions = get_transactions();
                 log::info!("{}",id_detail.ident.as_ref().is_none());
                 let date = format!("20{}-{}-{}",&weight_detail.date[6..8],&weight_detail.date[3..5],&weight_detail.date[0..2]);
                 let datetime = format!("{}T{}:00",date, weight_detail.time);
-                let mut transactions = Transactions::default();
-                if id_detail.ident != None {
+                if transactions.id == None {
+                    transactions = Transactions::default();
                     transactions.first_weight = Some(weight_detail.weight.to_string());
                     transactions.firstw_date_time = Some(datetime.to_string());
                     transactions.net_weight = Some(weight_detail.weight.to_string());
@@ -143,7 +144,7 @@ impl Component for WeightViewModel {
                     return Msg::NextPage(true);
                 }
                 else {
-                    transactions = get_transactions();
+                    // transactions = get_transactions();
                     transactions.second_weight = Some(weight_detail.weight.to_string());
                     transactions.secondw_alibi_nr = Some(weight_detail.alibi_nr.to_string());
                     transactions.secondw_date_time = Some(datetime.to_string());

@@ -141,9 +141,11 @@ impl Component for SignatureModel {
     fn view(&self, ctx: &Context<Self>) -> Html {
         // self.start();
         let link = ctx.link();
-        let canvas = link.send_future(async move {
-            Msg::SetCanvas
-        });
+        if self.is_loading == false{
+            let canvas = link.send_future(async move {
+                Msg::SetCanvas
+            });
+        }
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let get_contract_cb = ctx.link().callback(move |_|{
             Msg::SetLoading

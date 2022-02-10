@@ -90,8 +90,8 @@ pub struct Transactions {
     pub secondw_date_time: Option<String>,
     pub firstw_alibi_nr: Option<String>,
     pub secondw_alibi_nr: Option<String>,
-    pub vehicle_weight_flag: Option<String>,
-    pub vehicle_second_weight_flag: Option<String>,
+    pub vehicle_weight_flag: Option<i32>,
+    pub vehicle_second_weight_flag: Option<i32>,
     pub trans_flag: Option<i32>,
     pub price_per_item: Option<String>,
     pub status: Option<String>,
@@ -217,4 +217,10 @@ impl Default for Token {
             token: "".to_string()
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone,Default)]
+pub struct Settings{
+    pub tara_save: bool,
+    pub tara_pin: String
 }

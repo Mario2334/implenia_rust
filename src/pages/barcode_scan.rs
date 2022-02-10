@@ -134,21 +134,34 @@ impl Component for BarcodeModel {
                             let id: ID = serde_json::from_value(data).unwrap();
                             log::info!("{:?}", id.clone());
                             set_id(id.clone());
-                            if id.vehicle.is_none() {
-                                Msg::NextPage(RouteType::LicensePlate)
+                            let transaction_request_url = &format!(
+                                "{}/api/Transactions/?combination_id={}&trans_flag=0",
+                                API_URL,
+                                id.ident.as_ref().unwrap()
+                            );
+                            let response = get_request(&transaction_request_url).await;
+                            if response.as_ref().unwrap().get(0) != None {
+                                let data = response.unwrap().get_mut(0).unwrap().clone();
+                                log::info!("{}",data);
+                                let transaction: Transactions = serde_json::from_value(data).unwrap();
+                                set_transactions(transaction);
                             } else {
-                                let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
-                                let weight_response = get_request(websocket_url).await;
-                                let weight_data = weight_response.unwrap().clone();
-                                let weight_response: WeightResponse =
-                                    serde_json::from_value(weight_data).unwrap();
-                                set_weight_detail(weight_response.clone());
-                                Msg::NextPage(RouteType::WeightInput)
+                                if id.vehicle.is_none() {
+                                    return Msg::NextPage(RouteType::LicensePlate);
+                                }
                             }
+                            let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                            let weight_response = get_request(websocket_url).await;
+                            let weight_data = weight_response.unwrap().clone();
+                            let weight_response: WeightResponse =
+                                serde_json::from_value(weight_data).unwrap();
+                            set_weight_detail(weight_response.clone());
+                            Msg::NextPage(RouteType::WeightInput)
+
                         } else {
                             // let data_null = ID::default();
                             // set_id(data_null.clone());
-                            Msg::ErrorPage("error_connecting_server".to_string())
+                            Msg::ErrorPage("id_not_found".to_string())
                         }
                     });
 

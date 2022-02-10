@@ -1,18 +1,19 @@
 use crate::components::images;
 use crate::components::popup_messages::error_popup;
 use crate::components::request::{get_request, post_request};
-use crate::components::state::{get_global_lang, reset_state, set_global_lang, set_token};
+use crate::components::state::{get_global_lang, reset_state, set_global_lang, set_settings, set_token};
 use crate::components::utils::set_get::*;
 use crate::components::utils::*;
 use crate::components::websocket::start_websocket;
 use serde_json::Value;
 use std::collections::HashMap;
+use log::log;
 // use js_sys::Intl::format;
 use web_sys::console;
 use web_sys::console::log_1;
 use yew::prelude::*;
 use crate::components::constants::API_URL;
-use crate::components::model::{Token, User};
+use crate::components::model::{Settings, Token, User};
 
 pub enum Msg {
     GetLanguage(serde_json::Value),
@@ -29,6 +30,12 @@ impl LanguageModel {
         let lang_json = get_request("/bin/language.json").await;
         log::info!("{}", lang_json.is_ok());
         return lang_json.unwrap();
+    }
+
+    async fn set_settings() {
+        let response = get_request("/bin/settings.json").await;
+        let sett_json: Settings = serde_json::from_value(response.unwrap()).unwrap();
+        set_settings(sett_json);
     }
 
     fn get_value(&self, value: &str) -> String {
@@ -65,6 +72,7 @@ impl Component for LanguageModel {
         _ctx.link().send_future(async {
             let lang_json = Self::get_language_file().await;
             Self::authenticate().await;
+            Self::set_settings().await;
             Msg::GetLanguage(lang_json)
         });
         Self {

@@ -3,7 +3,6 @@
         "option_register": "Register",
         "option_yardlist": "YardList",
         "yes": "YES",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "no": "NO",
         "do_you_have_id": "Do you have ID/QR CODE?",
         "please_wait": "Please wait...",
@@ -31,7 +30,7 @@
         "license_already_exists": "The following License already exists in the Database!",
         "id_not_found": "ID Not found",
         "recheck_id": "Recheck ID, or Register again",
-        "retry_butt": "Wrong QR-Code!",
+        "retry_butt": "Retry",
         "restart_butt": "Restart",
         "abort_butt": "Abort",
         "error_connecting_server": "Server error",
@@ -64,14 +63,14 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "Tara Weight save successfully",
-        "gross_weight": "Gross weight"
+        "gross_weight": "Gross weight",
+        "contract": "Contract"
         
         
     },
     "de": {
         "option_register": "Anmelden",
         "option_yardlist": "Hofliste",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "Ja",
         "no": "Nein",
         "do_you_have_id": "Haben Sie ID?",
@@ -86,7 +85,7 @@
         "thank_you": "Vielen Dank",
         "wish_you_a_good_ride": "Bitte Wiegeschein entnehmen und Waage verlassen.\nGute Fahrt!",
         "extracting_license_plate": "Ihr Kfz-Kennzeichen wird erkannt!",
-        "check_extracted_license_plate": "Bitte Kennzeichen prüfen, falls es falsch ist, bitte korrigieren!",
+        "check_extracted_license_plate": "Überprüfen Sie Ihr Kfz-Kennzeichen ... Wenn es falsch ist, korrigieren Sie es bitte",
         "license_plate_label": "Kfz-Kennzeichen",
         "enter_constumer_name": "Kunde eingeben",
         "name_label": "Name: ",
@@ -100,16 +99,16 @@
         "license_already_exists": "Die folgende Kennzeichen ist bereits in der Datenbank vorhanden!",
         "id_not_found": "ID nicht gefunden!",
         "recheck_id": "Bitte ID noch einmal prüfen oder neu registrieren",
-        "retry_butt": "Falscher QR-Code",
+        "retry_butt": "ID-Code verwenden",
         "restart_butt": "Neustart",
         "abort_butt": "Abbrechen!",
         "error_connecting_server": "Serverfehler",
         "extracting_image": "Bitte Warten! Bildaufnahme ist im Prozess",
-        "extracting_reciept": "Beleg extrahieren..\nBitte warten",
-        "signature": "Bitte unterschreiben",
+        "extracting_reciept": "Beleg wird gedruckt..\nBitte warten",
+        "signature": "Bitte unterschreiben.",
         "reset": "Löschen",
-        "vehicle": "Fahrzeug",
-        "article": "Material",
+        "vehicle": "Bitte das Kennzeichen eingeben.",
+        "article": "Bitte das Material eingeben.",
         "customer": "Kunde",
         "supplier": "Baustelle",
         "ident": "ID",
@@ -126,14 +125,15 @@
         "or": "oder",
         "enter_barcode_manually": "manuell eingeben",
         "contract_number": "Auftragsnummer",
-        "first_wight_thanks": "Bitte Hofticket entnehmen und Waage verlassen.",
+        "first_wight_thanks": "Bitte die Waage verlassen.",
         "lfd_number": "lfd nummer :",
         "net_weight": "Nettogewicht :",
         "status": "",
         "input": "Anlieferung",
         "output": "Abholung",
         "tara_save": "Taragewicht wurde erfolgreich gespeichert",
-        "gross_weight": "Bruttogewicht"
+        "gross_weight": "Bruttogewicht",
+        "contract": "Bitte den Auftragsnamen eingeben."
         
         
     },
@@ -142,7 +142,6 @@
         "option_yardlist": "liste de la cour",
         "yes": "Oui",
         "no": "Non",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "do_you_have_id": "avez-vous l'ID ?",
         "please_wait": "attendez!",
         "enter_id": "entrez ID",
@@ -202,13 +201,13 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "pl": {
         "option_register": "Zarejestrować",
         "option_yardlist": "YardList",
         "yes": "TAK",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "no": "NIE",
         "do_you_have_id": "Czy masz ID/KOD QR?",
         "please_wait": "Proszę czekać...",
@@ -269,14 +268,14 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "ru": {
         "option_register": "Регистр",
         "option_yardlist": "YardList",
         "yes": "ДА",
         "no": "НЕТ",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "do_you_have_id": "У вас есть ID / QR CODE?",
         "please_wait": "Пожалуйста, ждите....",
         "enter_id": "ВВЕДИТЕ ID / QR-КОД",
@@ -336,13 +335,13 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "cs": {
         "option_register": "Registrovat",
         "option_yardlist": "YardList",
         "yes": "ANO",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "no": "NE",
         "do_you_have_id": "Máte ID/QR KÓD?",
         "please_wait": "Prosím, čekejte....",
@@ -403,13 +402,13 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "cr": {
         "option_register": "Registar",
         "option_yardlist": "YardList",
         "yes": "DA",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "no": "NE",
         "do_you_have_id": "Imate li ID/QR KOD",
         "please_wait": "Molimo pričekajte ....",
@@ -470,12 +469,12 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "hu": {
         "option_register": "Regisztráció",
         "option_yardlist": "YardList",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "IGEN",
         "no": "NEM",
         "do_you_have_id": "Van azonosító/QR -kódja?",
@@ -537,13 +536,13 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "ro": {
         "option_register": "Inregistreaza-te",
         "option_yardlist": "YardList",
         "yes": "DA",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "no": "NU",
         "do_you_have_id": "Aveți cod ID / QR?",
         "please_wait": "Te rog asteapta....",
@@ -604,12 +603,12 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "bg": {
         "option_register": "Регистрирам",
         "option_yardlist": "YardList",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "ДА",
         "no": "НЕ",
         "do_you_have_id": "Имате ли ID/QR КОД?",
@@ -671,12 +670,12 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "sr": {
         "option_register": "Регистровати",
         "option_yardlist": "ИардЛист",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "ДА",
         "no": "НЕ",
         "do_you_have_id": "Имате ли ИД/КР КОД?",
@@ -738,12 +737,12 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "tr": {
         "option_register": "Kayıt ol",
         "option_yardlist": "YardList",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "EVET",
         "no": "NUMARA",
         "do_you_have_id": "ID/QR KOD'unuz var mı?",
@@ -805,12 +804,12 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     },
     "nl": {
         "option_register": "Register",
         "option_yardlist": "YardLijst",
-        "logo_under_line": "Energieversorgung Offenbach AG (EVO)",
         "yes": "JA",
         "no": "NEE",
         "do_you_have_id": "Heeft u een ID/QR-CODE?",
@@ -872,6 +871,7 @@
         "input": "Input",
         "output": "Output",
         "tara_save": "",
-        "gross_weight": ""
+        "gross_weight": "",
+        "contract": ""
     }
 }
