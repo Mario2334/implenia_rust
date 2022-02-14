@@ -213,14 +213,19 @@ pub struct Token {
 
 impl Default for Token {
     fn default() -> Self {
-        Token{
-            token: "".to_string()
+        Token {
+            token: "".to_string(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Clone,Default)]
-pub struct Settings{
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct Settings {
     pub tara_save: bool,
-    pub tara_pin: String
+    pub tara_pin: String,
+}
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct Vehicle {
+    pub license_plate: String,
+    pub id: i32,
 }

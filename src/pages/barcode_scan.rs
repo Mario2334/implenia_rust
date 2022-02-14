@@ -19,7 +19,7 @@ pub enum RouteType {
     Manual,
     LicensePlate,
     WeightInput,
-    ProcessDirection
+    ProcessDirection,
 }
 
 pub struct BarcodeModel {
@@ -40,7 +40,7 @@ pub enum Msg {
 
 impl BarcodeModel {
     async fn get_language_file() -> serde_json::Value {
-        let lang_json = get_request("/bin/language.json").await;
+        let lang_json = get_request("/bin/language.json", None).await;
         return lang_json.unwrap();
     }
 
@@ -125,7 +125,7 @@ impl Component for BarcodeModel {
                     _ctx.link().send_future(async move {
                         let url = &format!("{}/api/ID/?ident={}", API_URL, &b);
                         // let url = "http://80.152.148.142:9000/api/Contract/";
-                        let response = get_request(&url).await;
+                        let response = get_request(&url, None).await;
                         log::info!(
                             "Response {:?}",
                             response.as_ref().unwrap().as_array().unwrap().len()
@@ -140,26 +140,26 @@ impl Component for BarcodeModel {
                                 API_URL,
                                 id.ident.as_ref().unwrap()
                             );
-                            let response = get_request(&transaction_request_url).await;
+                            let response = get_request(&transaction_request_url, None).await;
                             if response.as_ref().unwrap().get(0) != None {
                                 let data = response.unwrap().get_mut(0).unwrap().clone();
-                                log::info!("{}",data);
-                                let transaction: Transactions = serde_json::from_value(data).unwrap();
+                                log::info!("{}", data);
+                                let transaction: Transactions =
+                                    serde_json::from_value(data).unwrap();
                                 set_transactions(transaction);
                             } else {
                                 if id.vehicle.is_none() {
                                     return Msg::NextPage(RouteType::LicensePlate);
                                 }
-                                return Msg::NextPage(RouteType::ProcessDirection)
+                                return Msg::NextPage(RouteType::ProcessDirection);
                             }
                             let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
-                            let weight_response = get_request(websocket_url).await;
+                            let weight_response = get_request(websocket_url, None).await;
                             let weight_data = weight_response.unwrap().clone();
                             let weight_response: WeightResponse =
                                 serde_json::from_value(weight_data).unwrap();
                             set_weight_detail(weight_response.clone());
                             Msg::NextPage(RouteType::WeightInput)
-
                         } else {
                             // let data_null = ID::default();
                             // set_id(data_null.clone());

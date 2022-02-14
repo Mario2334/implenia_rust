@@ -1,11 +1,10 @@
-use web_sys::history;
-use crate::routes::Route;
-use yew::prelude::*;
-use yew_router::prelude::*;
 use crate::components::constants::API_URL;
 use crate::components::model::Contract;
 use crate::components::request::get_request;
 use crate::components::state::{get_global_lang, set_contract};
+use crate::routes::Route;
+use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[derive(Default)]
 pub struct SelectContract {
@@ -19,14 +18,14 @@ pub enum Msg {
     GotHome,
     NextPage,
     PreviousPage,
-    SetContract
+    SetContract,
 }
 
 impl SelectContract {
     async fn get_contracts() -> Vec<Contract> {
-        let url = &format!("{}/api/Contract/",API_URL);
-        let response = get_request(url).await;
-        let contracts:Vec<Contract> = serde_json::from_value(response.unwrap()).unwrap();
+        let url = &format!("{}/api/Contract/", API_URL);
+        let response = get_request(url, None).await;
+        let contracts: Vec<Contract> = serde_json::from_value(response.unwrap()).unwrap();
         return contracts;
     }
 }
@@ -64,16 +63,17 @@ impl Component for SelectContract {
                 history.push(Route::Root);
                 true
             }
-            Msg::SetContractList(contracts) =>{
+            Msg::SetContractList(contracts) => {
                 self.contract_list = contracts.clone();
                 self.flitered_list = contracts;
                 true
             }
             Msg::SetContract => {
                 let history = _ctx.link().history().unwrap();
-                let contract = self.flitered_list.get(1).unwrap().into();
-                set_contract(contract);
-                history.push(Route::SelectMaterial)
+                let contract = self.flitered_list.get(1).unwrap();
+                set_contract(contract.clone());
+                history.push(Route::SelectMaterial);
+                true
             }
             Msg::SelectContract(x) => {
                 if x == String::from("<-") {
@@ -110,9 +110,6 @@ impl Component for SelectContract {
         let home_cb = link.callback(move |_| Msg::GotHome);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let next_cb = link.callback(move |_| Msg::NextPage);
-        let set_contract = link.callback({
-
-        });
 
         let lang_json_file = get_global_lang().clone();
         if lang_json_file.is_null() {
@@ -121,11 +118,12 @@ impl Component for SelectContract {
             return html! {<div></div>};
         }
 
-        let render_item = |x: String,idx: usize| -> Html {
+        let render_item = |x: String, idx: usize| -> Html {
+            let set_contract = link.callback(move |_| Msg::SetContract);
             html! {
                 <>
                         <div class = "row p-2" style = "height:100%">
-                            <div class = "col text-center" style = "height:100%;padding-top:60px;border-radius:15px;border: 1px solid black;background:#000947;color:white;font-size:20px">{x}</div>
+                            <div  onclick = {set_contract}   class = "col text-center" style = "height:100%;padding-top:60px;border-radius:15px;border: 1px solid black;background:#000947;color:white;font-size:20px">{x}</div>
                         </div>
                 </>
 

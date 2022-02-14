@@ -1,10 +1,11 @@
 use crate::components::constants::*;
 use crate::components::model::{Transactions, WeightResponse, ID};
-use crate::components::request::get_request;
+use crate::components::request::{get_request, post_request};
 use crate::components::state::*;
 use crate::components::utils::set_get::*;
 use crate::routes::Route;
 use log::log;
+use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -91,6 +92,7 @@ impl Component for LicensePlateView {
         ";
 
         let link = ctx.link();
+        let history = link.history().unwrap();
         let home_cb = link.callback(move |_| Msg::GotHome);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let next_cb = link.callback(move |_| Msg::UpdateLoading);
@@ -145,7 +147,30 @@ impl Component for LicensePlateView {
                 let weight_data = weight_response.unwrap().clone();
                 let weight_response: WeightResponse = serde_json::from_value(weight_data).unwrap();
                 set_weight_detail(weight_response.clone());
+                ident = urlencode({"combination_id": ID})
+                res = requests.get(url=BaseLayout.BASE_URL+f"/api/Transactions/?{ident}&trans_flag=0", headers=BaseLayout.get_headers, timeout=15).json()
+
                 */
+                // check for 2nd weighing
+                let request_url = format!(
+                    "{}api/Transactions/?combination_id={}&trans_flag=0",
+                    API_URL, b
+                );
+                log::info!("{}", request_url);
+                let response = get_request(&request_url, None).await;
+                if response.as_ref().unwrap().get(0) == None {
+                    // first weighing
+                    let url = format!("{}api/ID/?ident={}", API_URL, b);
+                    let response = get_request(&url, None).await;
+
+                    if response.as_ref().unwrap().get(0) == None {
+                        history.push(Route::RetryModel);
+                    } else {
+                        let data = response.unwrap().get_mut(0).unwrap().clone();
+                        let id: ID = serde_json::from_value(data).unwrap();
+                        set_id(id.clone());
+                    }
+                }
                 Msg::NextPage
             });
         }

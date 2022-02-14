@@ -26,7 +26,7 @@ pub struct BarcodeInputModel {
 
 impl BarcodeInputModel {
     async fn get_language_file() -> serde_json::Value {
-        let lang_json = get_request("/bin/language.json").await;
+        let lang_json = get_request("/bin/language.json", None).await;
         return lang_json.unwrap();
     }
     fn get_barcode(&self) -> String {
@@ -116,13 +116,13 @@ impl Component for BarcodeInputModel {
             let barcode = self.barcode_value.clone();
             ctx.link().send_future(async move {
                 let url = &format!("{}/api/ID/?ident={}", API_URL, barcode);
-                let response = get_request(url).await;
+                let response = get_request(url, None).await;
                 let data = response.unwrap().get(0).unwrap().clone();
                 let id: ID = serde_json::from_value(data).unwrap();
                 set_id(id.clone());
                 // start_websocket();
                 let websocket_url = &format!("{}?cmd=GET PLATE", DEVMAN_URL);
-                let weight_response = get_request(websocket_url).await;
+                let weight_response = get_request(websocket_url, None).await;
                 let weight_data = weight_response.unwrap().clone();
                 let license_plate_response: LicensePlateResponse =
                     serde_json::from_value(weight_data).unwrap();

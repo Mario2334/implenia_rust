@@ -1,7 +1,12 @@
-use crate::components::model::{Contract, Transactions, WeightResponse, ID, Settings};
+use crate::{
+    components::model::{Contract, Settings, Transactions, WeightResponse, ID},
+    pages::vehicle,
+};
 use lazy_static::lazy_static;
 use serde_json::Value;
 use std::sync::Mutex;
+
+use super::model::Vehicle;
 
 struct GlobalState {
     language_json: serde_json::Value,
@@ -11,7 +16,8 @@ struct GlobalState {
     id: ID,
     transactions: Transactions,
     token: String,
-    settings:Settings
+    settings: Settings,
+    vehicle: Vehicle,
 }
 
 impl Default for GlobalState {
@@ -24,7 +30,8 @@ impl Default for GlobalState {
             id: ID::default(),
             transactions: Transactions::default(),
             token: "".to_string(),
-            settings: Settings::default()
+            settings: Settings::default(),
+            vehicle: Vehicle::default(),
         }
     }
 }
@@ -51,7 +58,12 @@ impl GlobalState {
     fn set_token(&mut self, token: String) {
         self.token = token;
     }
-    fn set_settings(&mut self, settings: Settings) {self.settings = settings;}
+    fn set_settings(&mut self, settings: Settings) {
+        self.settings = settings;
+    }
+    fn set_vehicle(&mut self, vehicle: Vehicle) {
+        self.vehicle = vehicle;
+    }
     fn reset_state(&mut self) {
         self.language_json = Value::Null;
         self.contract = Contract::default();
@@ -60,7 +72,8 @@ impl GlobalState {
         self.id = ID::default();
         self.transactions = Transactions::default();
         self.token = "".to_string();
-        self.settings = Settings::default()
+        self.settings = Settings::default();
+        self.vehicle = Vehicle::default();
     }
 }
 
@@ -135,9 +148,15 @@ pub fn set_settings(settings: Settings) {
     GLOBALSTATE.lock().unwrap().set_settings(settings);
 }
 
-pub fn get_settings() -> Settings{
+pub fn get_settings() -> Settings {
     let settings = GLOBALSTATE.lock().unwrap().settings.clone();
-    return settings
+    return settings;
+}
+pub fn set_vehicle(vehicle: Vehicle) {
+    GLOBALSTATE.lock().unwrap().set_vehicle(vehicle);
+}
+pub fn get_vehicle() -> Vehicle {
+    GLOBALSTATE.lock().unwrap().vehicle.clone()
 }
 
 pub fn reset_state() {

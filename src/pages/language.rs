@@ -1,19 +1,21 @@
 use crate::components::images;
 use crate::components::popup_messages::error_popup;
 use crate::components::request::{get_request, post_request};
-use crate::components::state::{get_global_lang, reset_state, set_global_lang, set_settings, set_token};
+use crate::components::state::{
+    get_global_lang, reset_state, set_global_lang, set_settings, set_token,
+};
 use crate::components::utils::set_get::*;
 use crate::components::utils::*;
 use crate::components::websocket::start_websocket;
+use log::log;
 use serde_json::Value;
 use std::collections::HashMap;
-use log::log;
 // use js_sys::Intl::format;
+use crate::components::constants::API_URL;
+use crate::components::model::{Settings, Token, User};
 use web_sys::console;
 use web_sys::console::log_1;
 use yew::prelude::*;
-use crate::components::constants::API_URL;
-use crate::components::model::{Settings, Token, User};
 
 pub enum Msg {
     GetLanguage(serde_json::Value),
@@ -27,13 +29,13 @@ pub struct LanguageModel {
 
 impl LanguageModel {
     async fn get_language_file() -> serde_json::Value {
-        let lang_json = get_request("/bin/language.json").await;
+        let lang_json = get_request("/bin/language.json", None).await;
         log::info!("{}", lang_json.is_ok());
         return lang_json.unwrap();
     }
 
     async fn set_settings() {
-        let response = get_request("/bin/settings.json").await;
+        let response = get_request("/bin/settings.json", None).await;
         let sett_json: Settings = serde_json::from_value(response.unwrap()).unwrap();
         set_settings(sett_json);
     }
@@ -50,14 +52,14 @@ impl LanguageModel {
     }
 
     async fn authenticate() {
-        let url = format!("{}/api-token-auth",API_URL);
+        let url = format!("{}api-token-auth", API_URL);
         let user = User {
             username: "admin@admin.com".to_string(),
-            password: "admin".to_string()
+            password: "admin".to_string(),
         };
         let body = serde_json::to_string(&user).unwrap();
-        let response = post_request(url.as_str(),body.as_str()).await;
-        let token:Token = serde_json::from_value(response.unwrap()).unwrap();
+        let response = post_request(url.as_str(), body.as_str(), None).await;
+        let token: Token = serde_json::from_value(response.unwrap()).unwrap();
         set_token(token.token);
     }
 }

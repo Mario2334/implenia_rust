@@ -27,7 +27,7 @@ pub struct LicensePlateModel {
 
 impl LicensePlateModel {
     async fn get_language_file() -> serde_json::Value {
-        let lang_json = get_request("/bin/language.json").await;
+        let lang_json = get_request("/bin/language.json", None).await;
         return lang_json.unwrap();
     }
 
@@ -44,7 +44,7 @@ impl LicensePlateModel {
     }
     async fn get_contract_detail(contract_number: &str) -> serde_json::Value {
         let url: &str = &format!("{}/api/Contract/{}/", API_URL, contract_number);
-        let res = get_request(&url).await;
+        let res = get_request(&url, None).await;
         return res.unwrap();
     }
 }

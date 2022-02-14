@@ -1,51 +1,47 @@
-use yew::prelude::*;
-use std::cell::Cell;
-use std::rc::Rc;
-use js_sys::Boolean;
-use log::log;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use yew_router::prelude::*;
 use crate::components::constants::API_URL;
 use crate::components::model::{DriverSignRequest, TransactionPDFRequest};
 use crate::components::request::{post_request, put_request};
 use crate::components::state::{get_global_lang, get_transactions};
 use crate::components::utils::set_get::*;
 use crate::routes::Route;
-
+use js_sys::Boolean;
+use log::log;
+use std::cell::Cell;
+use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use yew::prelude::*;
+use yew_router::prelude::*;
 
 pub enum Msg {
     SetCanvas,
     SetLoading,
     PreviousPage,
-    NextPage
+    NextPage,
 }
 
 pub struct SignatureModel {
-    is_loading: bool
+    is_loading: bool,
 }
 
 impl SignatureModel {
-
-    fn get_value(&self, value:&str) -> String{
+    fn get_value(&self, value: &str) -> String {
         let lang_json_inst = get_global_lang().clone();
         let val = lang_json_inst.get(get_lang()).and_then(|m| m.get(value));
-        if val.is_none() == false{
-            let mut a: String =  val.unwrap().to_string();
-            a = a.replace("\\n", " ").replace('"',"");
-            return a.clone()
-        }
-        else {
+        if val.is_none() == false {
+            let mut a: String = val.unwrap().to_string();
+            a = a.replace("\\n", " ").replace('"', "");
+            return a.clone();
+        } else {
             panic!("Language Setting Not Present")
         }
     }
 
-    fn start(&self) -> Result<(), JsValue>{
+    fn start(&self) -> Result<(), JsValue> {
         let document = web_sys::window().unwrap().document().unwrap();
         let canvas = document.get_element_by_id("canvas").unwrap();
         // let document = web_sys::window().unwrap().document().unwrap();
-        let canvas = canvas
-            .dyn_into::<web_sys::HtmlCanvasElement>()?;
+        let canvas = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
         // document.body().unwrap().append_child(&canvas)?;
         canvas.set_width(640);
         canvas.set_height(480);
@@ -65,7 +61,8 @@ impl SignatureModel {
                 context.move_to(event.offset_x() as f64, event.offset_y() as f64);
                 pressed.set(true);
             }) as Box<dyn FnMut(_)>);
-            canvas.add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
+            canvas
+                .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
         {
@@ -79,7 +76,8 @@ impl SignatureModel {
                     context.move_to(event.offset_x() as f64, event.offset_y() as f64);
                 }
             }) as Box<dyn FnMut(_)>);
-            canvas.add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
+            canvas
+                .add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
         {
@@ -100,8 +98,7 @@ impl SignatureModel {
     fn get_canvas_image(&self) -> String {
         let document = web_sys::window().unwrap().document().unwrap();
         let canvas = document.get_element_by_id("canvas").unwrap();
-        let canvas = canvas
-            .dyn_into::<web_sys::HtmlCanvasElement>().unwrap();
+        let canvas = canvas.dyn_into::<web_sys::HtmlCanvasElement>().unwrap();
         let image = canvas.to_data_url().unwrap();
         return image;
     }
@@ -112,7 +109,7 @@ impl Component for SignatureModel {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        Self{ is_loading: false }
+        Self { is_loading: false }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -124,7 +121,7 @@ impl Component for SignatureModel {
             Msg::SetLoading => {
                 self.is_loading = true;
                 true
-            },
+            }
             Msg::PreviousPage => {
                 let history = ctx.link().history().unwrap();
                 history.push(Route::LanguageModel);
@@ -141,50 +138,48 @@ impl Component for SignatureModel {
     fn view(&self, ctx: &Context<Self>) -> Html {
         // self.start();
         let link = ctx.link();
-        if self.is_loading == false{
-            let canvas = link.send_future(async move {
-                Msg::SetCanvas
-            });
+        if self.is_loading == false {
+            let canvas = link.send_future(async move { Msg::SetCanvas });
         }
         let back_cb = link.callback(move |_| Msg::PreviousPage);
-        let get_contract_cb = ctx.link().callback(move |_|{
-            Msg::SetLoading
-        });
+        let get_contract_cb = ctx.link().callback(move |_| Msg::SetLoading);
 
         let lang_json_file = get_global_lang().clone();
 
         if lang_json_file.is_null() {
             let history = ctx.link().history().unwrap();
             history.push(Route::LanguageModel);
-            return html!{<div></div>}
+            return html! {<div></div>};
         }
 
         if self.is_loading {
             log::info!("loading is true");
             let image_data = self.get_canvas_image();
-            log::info!("{}",image_data);
+            log::info!("{}", image_data);
             ctx.link().send_future(async {
                 let transactions = get_transactions();
-                let _driver_sign_request = DriverSignRequest{
+                let _driver_sign_request = DriverSignRequest {
                     image: Some(image_data),
-                    transaction_id: Some(transactions.id.unwrap())
+                    transaction_id: Some(transactions.id.unwrap()),
                 };
-                let driver_sign_update_url = &format!("{}/api/DriverSign/",API_URL);
+                let driver_sign_update_url = &format!("{}/api/DriverSign/", API_URL);
                 let body = serde_json::to_string(&_driver_sign_request).unwrap();
-                let driver_sign_resp = post_request(driver_sign_update_url,body.as_ref()).await;
+                let driver_sign_resp =
+                    post_request(driver_sign_update_url, body.as_ref(), None).await;
 
                 // Request PDF API
-                let pdf_request_body =TransactionPDFRequest {
-                    id: transactions.id.unwrap()
+                let pdf_request_body = TransactionPDFRequest {
+                    id: transactions.id.unwrap(),
                 };
-                let pdf_request_url = &format!("{}/api/pdf_backend",API_URL);
+                let pdf_request_url = &format!("{}/api/pdf_backend", API_URL);
                 let data = serde_json::to_string(&pdf_request_body);
-                let response = post_request(&pdf_request_url, &data.unwrap().to_string()).await;
+                let response =
+                    post_request(&pdf_request_url, &data.unwrap().to_string(), None).await;
                 Msg::NextPage
             });
         }
 
-        html!{
+        html! {
             <div style="overflow: 'hidden'">
                 <div class="container">
                     if self.is_loading{
