@@ -60,6 +60,7 @@ impl LanguageModel {
         let body = serde_json::to_string(&user).unwrap();
         let response = post_request(url.as_str(), body.as_str(), None).await;
         let token: Token = serde_json::from_value(response.unwrap()).unwrap();
+        log::info!("{}", token.token);
         set_token(token.token);
     }
 }

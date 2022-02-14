@@ -1,4 +1,4 @@
-use crate::components::constants::API_URL;
+use crate::components::constants::{API_URL, MULTISCALE, ONLY_ID, SCALE};
 use crate::components::model::{TransactionPDFRequest, Transactions, WeightResponse};
 use crate::components::request::{get_request, post_request, put_request};
 use crate::components::state::*;
@@ -105,9 +105,69 @@ impl Component for WeightViewModel {
             log::info!("loading is true");
             ctx.link().send_future(async {
                 let weight_detail = get_weight_detail();
-                let id_detail = get_id();
-                let mut transactions = get_transactions();
-                log::info!("{}", id_detail.ident.as_ref().is_none());
+                let mut vehicle = get_vehicle();
+                let mut id = get_id();
+                if vehicle.license_plate != "" {
+                    let vehicle_id = vehicle.id;
+                    let url = format!("{}api/Vehicle-View/", API_URL);
+                    let body = format!(
+                        "{{\"license_plate\":\"{}\"}}",
+                        vehicle.license_plate.clone()
+                    );
+                    log::info!("{}", body.clone());
+                    if vehicle_id == 0 {
+                        // post
+                        let result = post_request(&url, &body, None).await.unwrap();
+                        vehicle = serde_json::from_value(result).unwrap();
+                    } else {
+                        // put
+                        let url = format!("{}api/Vehicle-View/{}/", API_URL, vehicle.id);
+                        let _result = put_request(&url, &body).await.unwrap();
+                    }
+
+                    if id.vehicle.is_none() {
+                        id.vehicle = Some(vehicle.id);
+                        let url = format!("{}api/ID/{}/", API_URL, id.id.unwrap());
+                        let body = format!(
+                            "{{
+                                \"ident\":\"{}\",
+                                \"vehicle\":\"{}\"
+
+                        }}",
+                            id.ident.unwrap(),
+                            id.vehicle.unwrap()
+                        );
+                        let result = put_request(&url, &body).await.unwrap();
+                        id = serde_json::from_value(result).unwrap();
+                    }
+                }
+                /*
+                            tras_data = {
+                            "first_weight": BaseLayout.weight,
+                            'vehicle': BaseLayout.id_details["vehicle"],
+                            'article': BaseLayout.firstweight_data["material_id"],
+                            'customer': BaseLayout.id_details["customer"],
+                            'supplier': BaseLayout.id_details["supplier"],
+                            "net_weight": BaseLayout.weight,
+                            "firstw_date_time": str(BaseLayout.datetime.date())+"T"+str(BaseLayout.datetime.time())+"Z",
+                            "firstw_alibi_nr": BaseLayout.alibi_nr.replace(" ", ""),
+                            "combination_id": BaseLayout.id_details["ident"],
+                            "trans_flag": 0,
+                            "yard": 1
+                        }
+                         sup_id = ""
+                if len(BaseLayout.contract_details["supplier"]) > 0:
+                    sup_id = BaseLayout.contract_details["supplier"][0]["id"]
+                else:
+                    sup_id = None
+                tras_data["forwarders"] = BaseLayout.id_details["forwarders"]
+                tras_data["customer"] = BaseLayout.contract_details["customer"]["id"]
+                tras_data["supplier"] = sup_id
+                tras_data["contract_number"] = BaseLayout.contract_details["contract_number"]
+                 if BaseLayout.MULTISCALE:
+                tras_data["scale_nr"] = BaseLayout.SCALE
+
+                */
                 let date = format!(
                     "20{}-{}-{}",
                     &weight_detail.date[6..8],
@@ -115,56 +175,38 @@ impl Component for WeightViewModel {
                     &weight_detail.date[0..2]
                 );
                 let datetime = format!("{}T{}:00", date, weight_detail.time);
-                if transactions.id == None {
-                    transactions = Transactions::default();
-                    transactions.first_weight = Some(weight_detail.weight.to_string());
-                    transactions.firstw_date_time = Some(datetime.to_string());
-                    transactions.net_weight = Some(weight_detail.weight.to_string());
-                    transactions.firstw_alibi_nr = Some(weight_detail.alibi_nr.to_string());
-                    transactions.vehicle = id_detail.vehicle;
-                    transactions.article = id_detail.article;
-                    transactions.customer = id_detail.customer;
-                    transactions.supplier = id_detail.supplier;
-                    transactions.yard = Some(1);
-                    transactions.trans_flag = Some(0);
-                    transactions.combination_id = id_detail.ident;
-                    let url = &format!("{}/api/Transactions/", API_URL);
-                    let data = serde_json::to_string(&transactions);
-                    let response = post_request(&url, &data.unwrap().to_string(), None).await;
-                    let response_transaction: Transactions =
-                        serde_json::from_value(response.unwrap()).unwrap();
-
-                    // Request PDF API
-                    let pdf_request_body = TransactionPDFRequest {
-                        id: response_transaction.id.unwrap(),
-                    };
-                    let pdf_request_url = &format!("{}/api/pdf_backend", API_URL);
-                    let data = serde_json::to_string(&pdf_request_body);
-                    let response =
-                        post_request(&pdf_request_url, &data.unwrap().to_string(), None).await;
-                    log::info!("Response {:?}", response_transaction);
-                    return Msg::NextPage(true);
-                } else {
-                    // transactions = get_transactions();
-                    transactions.second_weight = Some(weight_detail.weight.to_string());
-                    transactions.secondw_alibi_nr = Some(weight_detail.alibi_nr.to_string());
-                    transactions.secondw_date_time = Some(datetime.to_string());
-                    transactions.trans_flag = Some(1);
-                    transactions.net_weight = Some(get_net_weight(
-                        weight_detail.weight.to_string(),
-                        transactions.clone(),
-                    ));
-
-                    let url =
-                        &format!("{}/api/Transactions/{}/", API_URL, transactions.id.unwrap());
-                    let data = serde_json::to_string(&transactions);
-                    let response = put_request(&url, &data.unwrap().to_string()).await;
-                    let response_transaction: Transactions =
-                        serde_json::from_value(response.unwrap()).unwrap();
-                    log::info!("{}", response_transaction.id.unwrap());
-                    set_transactions(response_transaction);
-                    return Msg::NextPage(false);
+                let mut trans = Transactions::default();
+                trans.first_weight = Some(weight_detail.clone().weight);
+                trans.vehicle = id.vehicle;
+                trans.article = Some(get_material().id.unwrap() as i32);
+                trans.customer = id.customer;
+                trans.supplier = id.supplier;
+                trans.net_weight = Some(weight_detail.weight);
+                trans.combination_id = id.ident;
+                trans.yard = Some(1);
+                trans.trans_flag = Some(0);
+                trans.firstw_alibi_nr = Some(weight_detail.alibi_nr.to_string());
+                trans.firstw_date_time = Some(datetime);
+                if ONLY_ID == false {
+                    let contract = get_contract();
+                    let mut sup_id: Option<i32> = None;
+                    if contract.supplier.is_some() && contract.supplier.as_ref().unwrap().len() > 0
+                    {
+                        sup_id = contract.supplier.unwrap().get(0).unwrap().id;
+                    }
+                    trans.forwarders = id.forwarders;
+                    trans.customer = Some(contract.customer.unwrap().id.unwrap() as i32);
+                    trans.supplier = sup_id;
+                    trans.contract_number = Some(contract.contract_number);
                 }
+                if MULTISCALE == true {
+                    trans.scale_nr = Some(SCALE);
+                }
+                let url = format!("{}api/Transactions/", API_URL);
+                let body = serde_json::to_string(&trans).unwrap();
+                let result = post_request(&url, &body, None).await;
+
+                Msg::NextPage(false)
             });
         }
 

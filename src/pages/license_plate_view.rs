@@ -43,7 +43,7 @@ impl Component for LicensePlateView {
     fn create(ctx: &Context<Self>) -> Self {
         let license_plate = get_license_plate();
         LicensePlateView {
-            license_plate,
+            license_plate: "RW58341".to_string(),
             loading: false,
         }
     }
@@ -147,8 +147,6 @@ impl Component for LicensePlateView {
                 let weight_data = weight_response.unwrap().clone();
                 let weight_response: WeightResponse = serde_json::from_value(weight_data).unwrap();
                 set_weight_detail(weight_response.clone());
-                ident = urlencode({"combination_id": ID})
-                res = requests.get(url=BaseLayout.BASE_URL+f"/api/Transactions/?{ident}&trans_flag=0", headers=BaseLayout.get_headers, timeout=15).json()
 
                 */
                 // check for 2nd weighing
@@ -169,6 +167,7 @@ impl Component for LicensePlateView {
                         let data = response.unwrap().get_mut(0).unwrap().clone();
                         let id: ID = serde_json::from_value(data).unwrap();
                         set_id(id.clone());
+                        log::info!("{}", id.id.is_some());
                     }
                 }
                 Msg::NextPage

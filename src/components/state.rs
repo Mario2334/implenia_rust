@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use serde_json::Value;
 use std::sync::Mutex;
 
-use super::model::Vehicle;
+use super::model::{Material, Vehicle};
 
 struct GlobalState {
     language_json: serde_json::Value,
@@ -18,6 +18,7 @@ struct GlobalState {
     token: String,
     settings: Settings,
     vehicle: Vehicle,
+    material: Material,
 }
 
 impl Default for GlobalState {
@@ -32,6 +33,7 @@ impl Default for GlobalState {
             token: "".to_string(),
             settings: Settings::default(),
             vehicle: Vehicle::default(),
+            material: Material::default(),
         }
     }
 }
@@ -64,6 +66,9 @@ impl GlobalState {
     fn set_vehicle(&mut self, vehicle: Vehicle) {
         self.vehicle = vehicle;
     }
+    fn set_material(&mut self, material: Material) {
+        self.material = material;
+    }
     fn reset_state(&mut self) {
         self.language_json = Value::Null;
         self.contract = Contract::default();
@@ -74,6 +79,7 @@ impl GlobalState {
         self.token = "".to_string();
         self.settings = Settings::default();
         self.vehicle = Vehicle::default();
+        self.material = Material::default();
     }
 }
 
@@ -157,6 +163,13 @@ pub fn set_vehicle(vehicle: Vehicle) {
 }
 pub fn get_vehicle() -> Vehicle {
     GLOBALSTATE.lock().unwrap().vehicle.clone()
+}
+
+pub fn set_material(material: Material) {
+    GLOBALSTATE.lock().unwrap().set_material(material);
+}
+pub fn get_material() -> Material {
+    GLOBALSTATE.lock().unwrap().material.clone()
 }
 
 pub fn reset_state() {

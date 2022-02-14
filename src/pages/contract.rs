@@ -23,7 +23,7 @@ pub enum Msg {
 
 impl SelectContract {
     async fn get_contracts() -> Vec<Contract> {
-        let url = &format!("{}/api/Contract/", API_URL);
+        let url = &format!("{}api/Contract/", API_URL);
         let response = get_request(url, None).await;
         let contracts: Vec<Contract> = serde_json::from_value(response.unwrap()).unwrap();
         return contracts;
@@ -70,7 +70,7 @@ impl Component for SelectContract {
             }
             Msg::SetContract => {
                 let history = _ctx.link().history().unwrap();
-                let contract = self.flitered_list.get(1).unwrap();
+                let contract = self.flitered_list.get(0).unwrap();
                 set_contract(contract.clone());
                 history.push(Route::SelectMaterial);
                 true
@@ -94,7 +94,6 @@ impl Component for SelectContract {
                         }
                     }
                 }
-
                 true
             }
         }
@@ -126,7 +125,6 @@ impl Component for SelectContract {
                             <div  onclick = {set_contract}   class = "col text-center" style = "height:100%;padding-top:60px;border-radius:15px;border: 1px solid black;background:#000947;color:white;font-size:20px">{x}</div>
                         </div>
                 </>
-
             }
         };
 
@@ -152,7 +150,7 @@ impl Component for SelectContract {
                     <div class="col-auto" style="border-radius:15px;width:1000px;height:170px;border: 1px solid black;overflow:auto">
 
                         {
-                            for self.flitered_list.iter().enumerate().map(|(i,st)| render_item(st.contract_number.clone(),i))
+                            for self.flitered_list.iter().enumerate().map(|(i,st)| render_item(st.name.clone(),i))
                         }
 
                     </div>

@@ -3,8 +3,22 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Customer {
-    name: Option<String>,
-    id: Option<i8>,
+    pub name: Option<String>,
+    pub id: Option<i8>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Supplier {
+    pub supplier_name: Option<String>,
+    pub id: Option<i32>,
+}
+impl Default for Supplier {
+    fn default() -> Self {
+        Self {
+            supplier_name: None,
+            id: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -14,31 +28,35 @@ pub struct ContractMaterial {
     remaining: Option<f32>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Material {
-    id: Option<i8>,
-    name: Option<String>,
+    pub id: Option<i8>,
+    pub name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Contract {
+    pub name: String,
     pub contract_number: String,
     pub customer: Option<Customer>,
     pub start_date: Option<String>,
     pub end_date: Option<String>,
     pub reserved_date: Option<String>,
     pub required_materials: Vec<ContractMaterial>,
+    pub supplier: Option<Vec<Supplier>>,
 }
 
 impl Default for Contract {
     fn default() -> Self {
         Contract {
+            name: "".to_string(),
             contract_number: "".to_string(),
             customer: None,
             start_date: None,
             end_date: None,
             reserved_date: None,
             required_materials: vec![],
+            supplier: None,
         }
     }
 }
@@ -98,12 +116,14 @@ pub struct Transactions {
     pub vehicle: Option<i32>,
     pub article: Option<i32>,
     pub customer: Option<i32>,
+    pub forwarders: Option<i32>,
     pub supplier: Option<i32>,
     pub container: Option<i32>,
     pub yard: Option<i32>,
     pub contract_number: Option<String>,
     pub created_date_time: Option<String>,
     pub updated_date_time: Option<String>,
+    pub scale_nr: Option<i32>,
 }
 
 impl Default for Transactions {
@@ -133,6 +153,8 @@ impl Default for Transactions {
             contract_number: None,
             created_date_time: None,
             updated_date_time: None,
+            forwarders: None,
+            scale_nr: None,
         }
     }
 }
