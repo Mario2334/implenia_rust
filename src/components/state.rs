@@ -8,6 +8,14 @@ use std::sync::Mutex;
 
 use super::model::{Material, Vehicle};
 
+#[derive(Clone)]
+pub enum WeighingType {
+    First,
+    Second,
+    TaraSava,
+    Tara,
+}
+
 struct GlobalState {
     language_json: serde_json::Value,
     contract: Contract,
@@ -19,6 +27,7 @@ struct GlobalState {
     settings: Settings,
     vehicle: Vehicle,
     material: Material,
+    weighing_type: WeighingType,
 }
 
 impl Default for GlobalState {
@@ -34,6 +43,7 @@ impl Default for GlobalState {
             settings: Settings::default(),
             vehicle: Vehicle::default(),
             material: Material::default(),
+            weighing_type: WeighingType::First,
         }
     }
 }
@@ -69,6 +79,11 @@ impl GlobalState {
     fn set_material(&mut self, material: Material) {
         self.material = material;
     }
+
+    fn set_weighing_type(&mut self, weighing_type: WeighingType) {
+        self.weighing_type = weighing_type;
+    }
+
     fn reset_state(&mut self) {
         self.language_json = Value::Null;
         self.contract = Contract::default();
@@ -80,6 +95,7 @@ impl GlobalState {
         self.settings = Settings::default();
         self.vehicle = Vehicle::default();
         self.material = Material::default();
+        self.weighing_type = WeighingType::First;
     }
 }
 
@@ -170,6 +186,13 @@ pub fn set_material(material: Material) {
 }
 pub fn get_material() -> Material {
     GLOBALSTATE.lock().unwrap().material.clone()
+}
+
+pub fn set_weighing_type(weighing_type: WeighingType) {
+    GLOBALSTATE.lock().unwrap().set_weighing_type(weighing_type);
+}
+pub fn get_weighing_type() -> WeighingType {
+    GLOBALSTATE.lock().unwrap().weighing_type.clone()
 }
 
 pub fn reset_state() {

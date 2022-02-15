@@ -94,6 +94,7 @@ impl Default for WeightResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TransactionPDFRequest {
     pub id: i32,
+    pub username: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

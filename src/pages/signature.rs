@@ -1,6 +1,7 @@
 use crate::components::constants::API_URL;
 use crate::components::model::{DriverSignRequest, TransactionPDFRequest};
 use crate::components::request::{post_request, put_request};
+use crate::components::send_weight::send_second_weight;
 use crate::components::state::{get_global_lang, get_transactions};
 use crate::components::utils::set_get::*;
 use crate::routes::Route;
@@ -157,12 +158,13 @@ impl Component for SignatureModel {
             let image_data = self.get_canvas_image();
             log::info!("{}", image_data);
             ctx.link().send_future(async {
+                send_second_weight().await;
                 let transactions = get_transactions();
                 let _driver_sign_request = DriverSignRequest {
                     image: Some(image_data),
                     transaction_id: Some(transactions.id.unwrap()),
                 };
-                let driver_sign_update_url = &format!("{}/api/DriverSign/", API_URL);
+                let driver_sign_update_url = &format!("{}api/DriverSign/", API_URL);
                 let body = serde_json::to_string(&_driver_sign_request).unwrap();
                 let driver_sign_resp =
                     post_request(driver_sign_update_url, body.as_ref(), None).await;
@@ -170,8 +172,9 @@ impl Component for SignatureModel {
                 // Request PDF API
                 let pdf_request_body = TransactionPDFRequest {
                     id: transactions.id.unwrap(),
+                    username: "".to_string(),
                 };
-                let pdf_request_url = &format!("{}/api/pdf_backend", API_URL);
+                let pdf_request_url = &format!("{}api/Pdf_lieferscheine_print/", API_URL);
                 let data = serde_json::to_string(&pdf_request_body);
                 let response =
                     post_request(&pdf_request_url, &data.unwrap().to_string(), None).await;

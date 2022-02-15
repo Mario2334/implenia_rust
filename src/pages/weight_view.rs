@@ -1,11 +1,8 @@
-use crate::components::constants::{API_URL, MULTISCALE, ONLY_ID, SCALE};
-use crate::components::model::{TransactionPDFRequest, Transactions, WeightResponse};
-use crate::components::request::{get_request, post_request, put_request};
+use crate::components::send_weight::*;
 use crate::components::state::*;
 use crate::components::utils::set_get::*;
 use crate::routes::Route;
 use log::log;
-use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -86,7 +83,7 @@ impl Component for WeightViewModel {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let link = ctx.link();
+        let link = ctx.link().clone();
         let home_cb = link.callback(move |_| Msg::GotHome);
         let back_cb = link.callback(move |_| Msg::PreviousPage);
         let next_cb = link.callback(move |_| Msg::UpdateLoading);
@@ -94,6 +91,7 @@ impl Component for WeightViewModel {
         log::info!("{}", contract.contract_number);
         log::info!("{}", get_license_plate());
         let lang_json_file = get_global_lang().clone();
+        let history = link.history().unwrap();
 
         if lang_json_file.is_null() {
             let history = ctx.link().history().unwrap();
@@ -103,110 +101,19 @@ impl Component for WeightViewModel {
 
         if self.loading {
             log::info!("loading is true");
-            ctx.link().send_future(async {
-                let weight_detail = get_weight_detail();
-                let mut vehicle = get_vehicle();
-                let mut id = get_id();
-                if vehicle.license_plate != "" {
-                    let vehicle_id = vehicle.id;
-                    let url = format!("{}api/Vehicle-View/", API_URL);
-                    let body = format!(
-                        "{{\"license_plate\":\"{}\"}}",
-                        vehicle.license_plate.clone()
-                    );
-                    log::info!("{}", body.clone());
-                    if vehicle_id == 0 {
-                        // post
-                        let result = post_request(&url, &body, None).await.unwrap();
-                        vehicle = serde_json::from_value(result).unwrap();
-                    } else {
-                        // put
-                        let url = format!("{}api/Vehicle-View/{}/", API_URL, vehicle.id);
-                        let _result = put_request(&url, &body).await.unwrap();
+            ctx.link().send_future(async move {
+                let weight_type = get_weighing_type();
+
+                match weight_type {
+                    WeighingType::First => send_first_weight().await,
+                    WeighingType::Second => {
+                        history.push(Route::SignatureModel);
                     }
-
-                    if id.vehicle.is_none() {
-                        id.vehicle = Some(vehicle.id);
-                        let url = format!("{}api/ID/{}/", API_URL, id.id.unwrap());
-                        let body = format!(
-                            "{{
-                                \"ident\":\"{}\",
-                                \"vehicle\":\"{}\"
-
-                        }}",
-                            id.ident.unwrap(),
-                            id.vehicle.unwrap()
-                        );
-                        let result = put_request(&url, &body).await.unwrap();
-                        id = serde_json::from_value(result).unwrap();
-                    }
+                    WeighingType::Tara => send_tara_weight().await,
+                    WeighingType::TaraSava => send_tara_save_weight().await,
                 }
-                /*
-                            tras_data = {
-                            "first_weight": BaseLayout.weight,
-                            'vehicle': BaseLayout.id_details["vehicle"],
-                            'article': BaseLayout.firstweight_data["material_id"],
-                            'customer': BaseLayout.id_details["customer"],
-                            'supplier': BaseLayout.id_details["supplier"],
-                            "net_weight": BaseLayout.weight,
-                            "firstw_date_time": str(BaseLayout.datetime.date())+"T"+str(BaseLayout.datetime.time())+"Z",
-                            "firstw_alibi_nr": BaseLayout.alibi_nr.replace(" ", ""),
-                            "combination_id": BaseLayout.id_details["ident"],
-                            "trans_flag": 0,
-                            "yard": 1
-                        }
-                         sup_id = ""
-                if len(BaseLayout.contract_details["supplier"]) > 0:
-                    sup_id = BaseLayout.contract_details["supplier"][0]["id"]
-                else:
-                    sup_id = None
-                tras_data["forwarders"] = BaseLayout.id_details["forwarders"]
-                tras_data["customer"] = BaseLayout.contract_details["customer"]["id"]
-                tras_data["supplier"] = sup_id
-                tras_data["contract_number"] = BaseLayout.contract_details["contract_number"]
-                 if BaseLayout.MULTISCALE:
-                tras_data["scale_nr"] = BaseLayout.SCALE
 
-                */
-                let date = format!(
-                    "20{}-{}-{}",
-                    &weight_detail.date[6..8],
-                    &weight_detail.date[3..5],
-                    &weight_detail.date[0..2]
-                );
-                let datetime = format!("{}T{}:00", date, weight_detail.time);
-                let mut trans = Transactions::default();
-                trans.first_weight = Some(weight_detail.clone().weight);
-                trans.vehicle = id.vehicle;
-                trans.article = Some(get_material().id.unwrap() as i32);
-                trans.customer = id.customer;
-                trans.supplier = id.supplier;
-                trans.net_weight = Some(weight_detail.weight);
-                trans.combination_id = id.ident;
-                trans.yard = Some(1);
-                trans.trans_flag = Some(0);
-                trans.firstw_alibi_nr = Some(weight_detail.alibi_nr.to_string());
-                trans.firstw_date_time = Some(datetime);
-                if ONLY_ID == false {
-                    let contract = get_contract();
-                    let mut sup_id: Option<i32> = None;
-                    if contract.supplier.is_some() && contract.supplier.as_ref().unwrap().len() > 0
-                    {
-                        sup_id = contract.supplier.unwrap().get(0).unwrap().id;
-                    }
-                    trans.forwarders = id.forwarders;
-                    trans.customer = Some(contract.customer.unwrap().id.unwrap() as i32);
-                    trans.supplier = sup_id;
-                    trans.contract_number = Some(contract.contract_number);
-                }
-                if MULTISCALE == true {
-                    trans.scale_nr = Some(SCALE);
-                }
-                let url = format!("{}api/Transactions/", API_URL);
-                let body = serde_json::to_string(&trans).unwrap();
-                let result = post_request(&url, &body, None).await;
-
-                Msg::NextPage(false)
+                Msg::NextPage(true)
             });
         }
 

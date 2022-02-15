@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::components::constants::*;
 use crate::components::model::{Transactions, WeightResponse, ID};
 use crate::components::request::{get_request, post_request};
@@ -7,7 +9,7 @@ use crate::routes::Route;
 use log::log;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
-use yew_router::prelude::*;
+use yew_router::{history, prelude::*};
 
 pub enum Msg {
     SetLicensePlate(String),
@@ -59,8 +61,14 @@ impl Component for LicensePlateView {
                 true
             }
             Msg::NextPage => {
+                let x = get_weighing_type();
                 let history = _ctx.link().history().unwrap();
-                history.push(Route::SelectVehicle);
+
+                match x {
+                    WeighingType::First => history.push(Route::SelectVehicle),
+                    WeighingType::Second => history.push(Route::WeightViewModel),
+                    _default => history.push(Route::WeightViewModel),
+                }
                 true
             }
             Msg::PreviousPage => {
@@ -110,54 +118,14 @@ impl Component for LicensePlateView {
         if self.loading {
             let b = self.license_plate.clone();
             ctx.link().send_future(async move {
-                /*let license_url = &format!("{}api/Vehicle-View/?license_plate={}", API_URL, &b);
-                let license_response = get_request(&license_url).await;
-
-                if license_response.as_ref().unwrap().get(0) != None {
-                    let license_data = license_response.unwrap().get_mut(0).unwrap().clone();
-                    let license_id = &license_data["id"];
-                    let id_url = &format!("{}api/ID/?vehicle={}", API_URL, &license_id);
-                    let response = get_request(&id_url).await;
-                    log::info!("Response {:?}", response.as_ref());
-                    if response.as_ref().unwrap().get(0) != None {
-                        let data = response.unwrap().get_mut(0).unwrap().clone();
-                        let id: ID = serde_json::from_value(data).unwrap();
-
-                        let transaction_request_url = &format!(
-                            "{}api/Transactions/?combination_id={}&trans_flag=0",
-                            API_URL,
-                            id.ident.as_ref().unwrap()
-                        );
-                        let response = get_request(&transaction_request_url).await;
-                        if response.as_ref().unwrap().get(0) != None {
-                            let data = response.unwrap().get_mut(0).unwrap().clone();
-                            let transaction: Transactions = serde_json::from_value(data).unwrap();
-                            set_transactions(transaction);
-                        } else {
-                            log::info!("{:?}", id.clone());
-                            set_id(id.clone());
-                        }
-                    } else {
-                        let data_null = ID::default();
-                        set_id(data_null.clone());
-                    }
-                }
-                let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
-                let weight_response = get_request(websocket_url).await;
-                let weight_data = weight_response.unwrap().clone();
-                let weight_response: WeightResponse = serde_json::from_value(weight_data).unwrap();
-                set_weight_detail(weight_response.clone());
-
-                */
-                // check for 2nd weighing
                 let request_url = format!(
                     "{}api/Transactions/?combination_id={}&trans_flag=0",
                     API_URL, b
                 );
-                log::info!("{}", request_url);
                 let response = get_request(&request_url, None).await;
                 if response.as_ref().unwrap().get(0) == None {
                     // first weighing
+                    set_weighing_type(WeighingType::First);
                     let url = format!("{}api/ID/?ident={}", API_URL, b);
                     let response = get_request(&url, None).await;
 
@@ -167,8 +135,19 @@ impl Component for LicensePlateView {
                         let data = response.unwrap().get_mut(0).unwrap().clone();
                         let id: ID = serde_json::from_value(data).unwrap();
                         set_id(id.clone());
-                        log::info!("{}", id.id.is_some());
                     }
+                } else {
+                    set_weighing_type(WeighingType::Second);
+                    let trans: Transactions =
+                        serde_json::from_value(response.unwrap().get(0).unwrap().clone()).unwrap();
+                    let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                    let weight_response = get_request(websocket_url, None).await;
+                    let weight_data = weight_response.unwrap().clone();
+                    let weight_response: WeightResponse =
+                        serde_json::from_value(weight_data).unwrap();
+                    log::info!("{}", weight_response.weight);
+                    set_weight_detail(weight_response.clone());
+                    set_transactions(trans);
                 }
                 Msg::NextPage
             });
