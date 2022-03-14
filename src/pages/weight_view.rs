@@ -58,12 +58,14 @@ impl Component for WeightViewModel {
         match msg {
             Msg::NextPage(is_fw) => {
                 let history = _ctx.link().history().unwrap();
-                if is_fw {
-                    history.push(Route::ThankYouModel);
-                } else {
-                    history.push(Route::SignatureModel);
+                let weighing_type = get_weighing_type();
+                match weighing_type {
+                    WeighingType::First => history.push(Route::ThankYouModel),
+                    WeighingType::Second => history.push(Route::SignatureModel),
+                    WeighingType::TaraSava => history.push(Route::ThankYouModel),
+                    WeighingType::Tara => history.push(Route::SignatureModel),
                 }
-                false
+                true
             }
             Msg::PreviousPage => {
                 let history = _ctx.link().history().unwrap();

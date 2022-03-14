@@ -7,9 +7,12 @@ use crate::components::state::{
 use crate::components::utils::set_get::*;
 use crate::components::utils::*;
 use crate::components::websocket::start_websocket;
+use crate::routes::Route;
 use log::log;
 use serde_json::Value;
 use std::collections::HashMap;
+use yew_router::history::{self, History};
+use yew_router::prelude::RouterScopeExt;
 // use js_sys::Intl::format;
 use crate::components::constants::API_URL;
 use crate::components::model::{Settings, Token, User};
@@ -20,6 +23,7 @@ use yew::prelude::*;
 pub enum Msg {
     GetLanguage(serde_json::Value),
     SetLanguage(&'static str),
+    GotoPin,
 }
 
 pub struct LanguageModel {
@@ -87,12 +91,18 @@ impl Component for LanguageModel {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::GetLanguage(lang_json) => {
+                log::info!("{}", "done");
                 set_global_lang(lang_json);
                 self.is_loading = false;
                 true
             }
             Msg::SetLanguage(str) => {
                 set_lang(str.clone());
+                true
+            }
+            Msg::GotoPin => {
+                let history = _ctx.link().history().unwrap();
+                history.push(Route::EnterPinModel);
                 true
             }
         }
@@ -102,6 +112,8 @@ impl Component for LanguageModel {
         // This gives us a component's "`Scope`" which allows us to send messages, etc to the component.
         let link = ctx.link();
         // start_websocket();
+        let admin_cb = link.callback(|_| Msg::GotoPin);
+
         html! {
                 <div class="container">
                     <div class="row" style="margin-top: 10px">
@@ -123,7 +135,7 @@ impl Component for LanguageModel {
 
                                     </div>
                                     <div>
-                                        <img width=150 height=70 src="/img/Logo.png"/>
+                                        <img width=150 height=70 src="/img/Logo.png" onclick = {admin_cb}/>
                                     </div>
                                 </div>
                             </div>

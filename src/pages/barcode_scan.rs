@@ -123,7 +123,7 @@ impl Component for BarcodeModel {
                     set_barcode(&self.barcode_number.clone());
                     let b = self.barcode_number.clone();
                     _ctx.link().send_future(async move {
-                        let url = &format!("{}/api/ID/?ident={}", API_URL, &b);
+                        let url = &format!("{}api/ID/?ident={}", API_URL, &b);
                         // let url = "http://80.152.148.142:9000/api/Contract/";
                         let response = get_request(&url, None).await;
                         log::info!(
@@ -215,6 +215,7 @@ impl Component for BarcodeModel {
 
         let lang_json_file = get_global_lang().clone();
         if lang_json_file.is_null() {
+            log::info!("{}", "redirecting");
             let history = ctx.link().history().unwrap();
             history.push(Route::LanguageModel);
             return html! {<div></div>};

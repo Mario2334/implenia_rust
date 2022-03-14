@@ -1,7 +1,7 @@
 use std::default;
 
 use crate::components::constants::*;
-use crate::components::model::{Transactions, WeightResponse, ID};
+use crate::components::model::{Transactions, Vehicle, WeightResponse, ID};
 use crate::components::request::{get_request, post_request};
 use crate::components::state::*;
 use crate::components::utils::set_get::*;
@@ -118,37 +118,90 @@ impl Component for LicensePlateView {
         if self.loading {
             let b = self.license_plate.clone();
             ctx.link().send_future(async move {
-                let request_url = format!(
-                    "{}api/Transactions/?combination_id={}&trans_flag=0",
-                    API_URL, b
-                );
-                let response = get_request(&request_url, None).await;
-                if response.as_ref().unwrap().get(0) == None {
-                    // first weighing
-                    set_weighing_type(WeighingType::First);
-                    let url = format!("{}api/ID/?ident={}", API_URL, b);
-                    let response = get_request(&url, None).await;
-
-                    if response.as_ref().unwrap().get(0) == None {
-                        history.push(Route::RetryModel);
-                    } else {
-                        let data = response.unwrap().get_mut(0).unwrap().clone();
-                        let id: ID = serde_json::from_value(data).unwrap();
-                        set_id(id.clone());
+                let w_type = get_weighing_type();
+                match w_type {
+                    WeighingType::TaraSava => {
+                        log::info!("{}", "inside tara save");
+                        let url = format!("{}api/ID/?ident={}", API_URL, b);
+                        let res = get_request(&url, None).await;
+                        if res.as_ref().unwrap().get(0) == None {
+                            history.push(Route::RetryModel);
+                        } else {
+                            let data = res.unwrap().get_mut(0).unwrap().clone();
+                            let id: ID = serde_json::from_value(data).unwrap();
+                            set_id(id.clone());
+                            if id.vehicle.is_some() {
+                                let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                                let weight_response = get_request(websocket_url, None).await;
+                                let weight_data = weight_response.unwrap().clone();
+                                let weight_response: WeightResponse =
+                                    serde_json::from_value(weight_data).unwrap();
+                                log::info!("{}", weight_response.weight);
+                                set_weight_detail(weight_response.clone());
+                                history.push(Route::WeightViewModel);
+                            } else {
+                                history.push(Route::SelectVehicle);
+                            }
+                        }
                     }
-                } else {
-                    set_weighing_type(WeighingType::Second);
-                    let trans: Transactions =
-                        serde_json::from_value(response.unwrap().get(0).unwrap().clone()).unwrap();
-                    let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
-                    let weight_response = get_request(websocket_url, None).await;
-                    let weight_data = weight_response.unwrap().clone();
-                    let weight_response: WeightResponse =
-                        serde_json::from_value(weight_data).unwrap();
-                    log::info!("{}", weight_response.weight);
-                    set_weight_detail(weight_response.clone());
-                    set_transactions(trans);
-                }
+                    _default => {
+                        let request_url = format!(
+                            "{}api/Transactions/?combination_id={}&trans_flag=0",
+                            API_URL, b
+                        );
+                        let response = get_request(&request_url, None).await;
+                        if response.as_ref().unwrap().get(0) == None {
+                            let url = format!("{}api/ID/?ident={}", API_URL, b);
+                            let res = get_request(&url, None).await;
+                            if res.as_ref().unwrap().get(0) == None {
+                                log::info!("{}", "from here");
+                                history.push(Route::RetryModel);
+                            } else {
+                                let data = res.unwrap().get_mut(0).unwrap().clone();
+                                let id: ID = serde_json::from_value(data).unwrap();
+                                set_id(id.clone());
+                                if id.tara_with_mobile.is_some() && id.tara_with_mobile.unwrap() {
+                                    set_weighing_type(WeighingType::Tara);
+                                    let url = format!(
+                                        "{}api/Vehicle-View/{}/",
+                                        API_URL,
+                                        id.vehicle.unwrap()
+                                    );
+                                    let vehicle: Vehicle = serde_json::from_value(
+                                        get_request(&url, None).await.unwrap(),
+                                    )
+                                    .unwrap();
+                                    if vehicle.vehicle_weight.is_none()
+                                        || vehicle.vehicle_weight.unwrap() <= 0.0
+                                    {
+                                        log::info!("{}", "from here 2");
+                                        history.push(Route::RetryModel);
+                                    } else {
+                                        set_vehicle(vehicle);
+                                        history.push(Route::ProcessDirection);
+                                    }
+                                } else {
+                                    //first weighing
+                                    set_weighing_type(WeighingType::First);
+                                }
+                            }
+                        } else {
+                            set_weighing_type(WeighingType::Second);
+                            let trans: Transactions =
+                                serde_json::from_value(response.unwrap().get(0).unwrap().clone())
+                                    .unwrap();
+                            let websocket_url = &format!("{}?cmd=GET WEIGHTNM", DEVMAN_URL);
+                            let weight_response = get_request(websocket_url, None).await;
+                            let weight_data = weight_response.unwrap().clone();
+                            let weight_response: WeightResponse =
+                                serde_json::from_value(weight_data).unwrap();
+                            log::info!("{}", weight_response.weight);
+                            set_weight_detail(weight_response.clone());
+                            set_transactions(trans);
+                        }
+                    }
+                };
+
                 Msg::NextPage
             });
         }

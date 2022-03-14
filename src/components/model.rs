@@ -251,4 +251,14 @@ pub struct Settings {
 pub struct Vehicle {
     pub license_plate: String,
     pub id: i32,
+    pub vehicle_weight: Option<f64>,
+    pub vehicle_weight_id: Option<String>,
+    pub vehicle_weight_date: Option<String>,
+    pub vehicle_weight_time: Option<String>,
+    pub self_tara: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct IDRead {
+    pub vehicle: Option<String>,
 }

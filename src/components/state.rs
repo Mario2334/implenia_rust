@@ -1,6 +1,6 @@
 use crate::{
     components::model::{Contract, Settings, Transactions, WeightResponse, ID},
-    pages::vehicle,
+    pages::{process_direction, vehicle},
 };
 use lazy_static::lazy_static;
 use serde_json::Value;
@@ -28,6 +28,7 @@ struct GlobalState {
     vehicle: Vehicle,
     material: Material,
     weighing_type: WeighingType,
+    process_direction: bool,
 }
 
 impl Default for GlobalState {
@@ -44,6 +45,7 @@ impl Default for GlobalState {
             vehicle: Vehicle::default(),
             material: Material::default(),
             weighing_type: WeighingType::First,
+            process_direction: false,
         }
     }
 }
@@ -83,6 +85,9 @@ impl GlobalState {
     fn set_weighing_type(&mut self, weighing_type: WeighingType) {
         self.weighing_type = weighing_type;
     }
+    fn set_process_direction(&mut self, process_direction: bool) {
+        self.process_direction = process_direction;
+    }
 
     fn reset_state(&mut self) {
         self.language_json = Value::Null;
@@ -96,6 +101,7 @@ impl GlobalState {
         self.vehicle = Vehicle::default();
         self.material = Material::default();
         self.weighing_type = WeighingType::First;
+        self.process_direction = false;
     }
 }
 
@@ -193,6 +199,16 @@ pub fn set_weighing_type(weighing_type: WeighingType) {
 }
 pub fn get_weighing_type() -> WeighingType {
     GLOBALSTATE.lock().unwrap().weighing_type.clone()
+}
+
+pub fn get_process_direction() -> bool {
+    GLOBALSTATE.lock().unwrap().process_direction.clone()
+}
+pub fn set_process_direction(process_direction: bool) {
+    GLOBALSTATE
+        .lock()
+        .unwrap()
+        .set_process_direction(process_direction);
 }
 
 pub fn reset_state() {

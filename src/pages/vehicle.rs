@@ -105,10 +105,10 @@ impl Component for SelectVehicle {
             Msg::AddVehicle => {
                 if self.vehicle != "" {
                     log::info!("{}", self.vehicle.clone());
-                    self.vehicle_list.push(Vehicle {
-                        license_plate: self.vehicle.clone(),
-                        id: 0,
-                    });
+                    let mut vehicle = Vehicle::default();
+                    vehicle.license_plate = self.vehicle.clone();
+                    vehicle.id = 0;
+                    self.vehicle_list.push(vehicle);
                     self.vehicle = "".to_string();
                     self.flitered_list = self.vehicle_list.clone();
                     true

@@ -1,13 +1,14 @@
 pub(crate) mod barcode_input;
 pub(crate) mod barcode_scan;
 pub(crate) mod contract;
+pub(crate) mod enterpin;
 pub(crate) mod language;
 pub(crate) mod license_plate;
 pub(crate) mod license_plate_view;
 pub(crate) mod material;
+pub(crate) mod process_direction;
 pub(crate) mod retry;
 pub(crate) mod signature;
 pub(crate) mod thankyou;
 pub(crate) mod vehicle;
 pub(crate) mod weight_view;
-pub(crate) mod process_direction;
